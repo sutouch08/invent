@@ -221,99 +221,76 @@ echo "<form id='add_order_form' action='controller/tranferController.php?add=y' 
 				}echo "<div></div>";
 	}
 }else{
-		echo"<form  method='post' id='form'>
-		<div class='row'>
-			<div class='col-xs-2 col-xs-offset-4'>
-				<div class='input-group'>
-					<span class='input-group-addon'> จาก :</span>
-					<input type='text' class='form-control' name='from_date' id='from_date'  value='";
-					 if(isset($_POST['from_date']) && $_POST['to_date'] && $_POST['from_date'] && $_POST['to_date'] !="เลือกวัน"){ echo date('d-m-Y',strtotime($_POST['from_date']));} else { echo "เลือกวัน";}
-					 echo "'/>
-				</div>
-			</div>
-			<div class='col-xs-2 '>
-				<div class='input-group'>
-					<span class='input-group-addon'>ถึง :</span>
-				 <input type='test' class='form-control'  name='to_date' id='to_date' value='";
-				  if(isset($_POST['from_date']) && $_POST['to_date'] && $_POST['from_date'] && $_POST['to_date'] !="เลือกวัน"){ echo date('d-m-Y',strtotime($_POST['to_date']));} else{ echo "เลือกวัน";}  echo"' />
-				</div>
-			</div>
-			<div class='col-xs-1'>
-					<button type='button' class='btn btn-default' onclick='validate()'>แสดง</button>
-			</div>
-         </div>
-				</form>
-				<hr style='border-color:#CCC; margin-top: 15px; margin-bottom:0px;' />
+
+	$paginator = new paginator();
+	$get_rows = isset( $_POST['get_rows'] ) ? $_POST['get_rows'] : ( getCookie('get_rows') ? getCookie('get_rows') : 50);
+
+	$where = "WHERE id_tranfer != 0 ORDER BY id_tranfer DESC";
+	$page  = isset($_GET['Page']) ? $_GET['Page'] : 1;
+	
+
+?>
+
 <div class='row'>
 <div class='col-xs-12'>
+
+<?php $paginator->Per_Page("tbl_tranfer",$where,$get_rows); ?>
+<?php $paginator->display($get_rows,"index.php?content=tranfer"); ?>
+
 	<table class='table table-striped table-hover'>
     	<thead style='background-color:#48CFAD;'>
         	<th style='width:5%; text-align:center;'>ลำดับ</th>
-					<th style='width:15%;'>อ้างอิง</th>
-          <th style='width:10%; text-align:center;'>ย้ายจาก</th>
-					<th style='width:10%; text-align:center;'>ไปที่</th>
-					<th style='width:10%; text-align:center;'>พนักงาน</th>
-					<th style='width:10%; text-align:center;'>วันที่</th>
-					<th style='width:10%; text-align:center;'>สถานะ</th>
-					<th style='width:10%; text-align:center;'>การกระทำ</th>
-        </thead>";
-		$view = "";
-		if(isset($_POST['from_date'])){	$from = date('Y-m-d',strtotime($_POST['from_date'])); }else{ $from = "";} if(isset($_POST['to_date'])){  $to =date('Y-m-d',strtotime($_POST['to_date'])); }else{ $to = "";}
-		if($from==""){
-			if($to==""){
-				$view = "week";
-				$date = getLastDays($view);
-				$from = $date['from'];
-				$to = $date['to'];
-			}
-		}
-		$result = dbQuery("SELECT id_tranfer,id_employee,warehouse_from,warehouse_to,reference,date_add FROM tbl_tranfer WHERE (date_add BETWEEN '$from' AND '$to') ORDER BY id_tranfer DESC");
-		$i=0;
-		$n=1;
-		$row = dbNumRows($result);
-		if($row<1){
-		echo"<tr><td colspan='8' align='center'><h3>ไม่มีรายการในช่วงนี้</h3></td></tr>";
-		}else{
-		while($i<$row){
-			list($id,$id_employee,$warehouse_from,$warehouse_to,$reference,$date_add) = dbFetchArray($result);
-			list($from) = dbFetchArray(dbQuery("SELECT warehouse_name FROM tbl_warehouse WHERE id_warehouse = $warehouse_from"));
-			list($to) = dbFetchArray(dbQuery("SELECT warehouse_name FROM tbl_warehouse WHERE id_warehouse = $warehouse_to"));
-			$employee = new employee($id_employee);
-			echo "<tr>
-			<td align='center' style='cursor:pointer;' onclick=\"document.location='index.php?content=tranfer&add=y&id_tranfer=$id'\">$n</td>
-			<td style='cursor:pointer;' onclick=\"document.location='index.php?content=tranfer&add=y&id_tranfer=$id'\">$reference</td>
-			<td align='center' style='cursor:pointer;' onclick=\"document.location='index.php?content=tranfer&add=y&id_tranfer=$id'\">$from</td>
-			<td align='center' style='cursor:pointer;' onclick=\"document.location='index.php?content=tranfer&add=y&id_tranfer=$id'\">$to</td>
-			<td align='center' style='cursor:pointer;' onclick=\"document.location='index.php?content=tranfer&add=y&id_tranfer=$id'\">".$employee->first_name."</td>
-			<td align='center' style='cursor:pointer;' onclick=\"document.location='index.php?content=tranfer&add=y&id_tranfer=$id'\">".showDate($date_add)."</td>
-			<td align='center' style='cursor:pointer;' onclick=\"document.location='index.php?content=tranfer&add=y&id_tranfer=$id'\">";
-				$rows = dbNumRows(dbQuery("SELECT id_product_attribute FROM tbl_tranfer_detail WHERE id_tranfer = ".$id." AND valid = 0"));
-				if($rows > 0){
-					echo "<span style='color:red;'>ไม่สมบูรณ์</span>";
-				}
-
-			echo "</td>
-			<td align='center'>";
-			if($edit) :
-				echo "<a href='index.php?content=tranfer&add=y&id_tranfer=$id''><button class='btn btn-warning btn-sx'><i class='fa fa-pencil'></i></button>	</a>";
-			endif;
-			if($delete) :
-				echo "<button class='btn btn-danger btn-sx' onclick='delete_tranfer($id)'><i class='fa fa-trash'></i>	</button>";
-			endif;
-			echo "
+			<th style='width:15%;'>อ้างอิง</th>
+          	<th style='width:10%; text-align:center;'>ย้ายจาก</th>
+			<th style='width:10%; text-align:center;'>ไปที่</th>
+			<th style='width:10%; text-align:center;'>พนักงาน</th>
+			<th style='width:10%; text-align:center;'>วันที่</th>
+			<th style='width:10%; text-align:center;'>สถานะ</th>
+			<th style='width:10%; text-align:center;'>การกระทำ</th>
+        </thead>
+<?php 	$qs = dbQuery("SELECT * FROM tbl_tranfer ". $where ." LIMIT ".$paginator->Page_Start.", ".$paginator->Per_Page); 	?>
+<?php 	if( dbNumRows($qs) > 0 ) : ?>
+<?php 		$n = ($page -1) * $paginator->Per_Page + 1; ?>
+<?php 		while($rs = dbFetchObject($qs)) : ?>
+		<tr>
+			<td align='center' style='cursor:pointer;' onclick="getEdit(<?php echo $rs->id_tranfer; ?>)"> <?php echo $n; ?></td>
+			<td style='cursor:pointer;' onclick="getEdit(<?php echo $rs->id_tranfer; ?>)"><?php echo $rs->reference; ?></td>
+			<td align='center' style='cursor:pointer;' onclick="getEdit(<?php echo $rs->id_tranfer; ?>)"><?php echo get_warehouse_name_by_id($rs->warehouse_from); ?></td>
+			<td align='center' style='cursor:pointer;' onclick="getEdit(<?php echo $rs->id_tranfer; ?>)"><?php echo get_warehouse_name_by_id($rs->warehouse_to); ?></td>
+			<td align='center' style='cursor:pointer;' onclick="getEdit(<?php echo $rs->id_tranfer; ?>)"><?php echo employee_name($rs->id_employee); ?></td>
+			<td align='center' style='cursor:pointer;' onclick="getEdit(<?php echo $rs->id_tranfer; ?>)"><?php echo thaiDate($rs->date_add); ?></td>
+			<td align='center' style='cursor:pointer;' onclick="getEdit(<?php echo $rs->id_tranfer; ?>)">
+				<?php $rows = dbNumRows(dbQuery("SELECT id_product_attribute FROM tbl_tranfer_detail WHERE id_tranfer = ".$rs->id_tranfer." AND valid = 0")); ?>
+				<?php  if($rows > 0) : ?>
+					<span style='color:red;'>ไม่สมบูรณ์</span>
+				<?php  endif; ?>
 			</td>
-			</tr>";
-			$i++;
-			$n++;
-		}
-		echo"
+			<td align='center'>
+			<?php if($edit) : ?>
+				<a href='index.php?content=tranfer&add=y&id_tranfer=<?php echo $rs->id_tranfer; ?>'><button class='btn btn-warning btn-sx'><i class='fa fa-pencil'></i></button></a>
+			<?php endif; ?>
+			<?php if($delete) : ?>
+				<button class='btn btn-danger btn-sx' onclick='delete_tranfer(<?php echo $rs->id_tranfer; ?>)'><i class='fa fa-trash'></i>	</button>
+			<?php endif; ?>
+			</td>
+		</tr>
+		<?php $n++;	 ?>
+<?php 		endwhile; ?>	
+<?php 	endif; ?>		
     </table>
-</div> </div>";
+</div> 
+</div>
+<?php 
 }
-}
+
 ?>
 </div>
 <script language="javascript">
+
+function getEdit(id)
+{
+	window.location.href = "index.php?content=tranfer&add=y&id_tranfer="+id;
+}
 $(function() {
     $("#from_date").datepicker({
       dateFormat: 'dd-mm-yy', onClose: function( selectedDate ) {

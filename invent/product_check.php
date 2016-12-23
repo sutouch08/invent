@@ -51,7 +51,7 @@
 <?php elseif( isset( $_GET['id_zone'] ) ) : ?>
 <div class="row">
 	<div class="col-lg-3 col-lg-offset-4">
-    	<input type="text" class="form-control input-sm" id="txt_zone" placeholder="ระบุ ชื่อโซน หรือ ยิงบาร์โค้ดโซน" style="text-align:center;" />
+    	<input type="text" class="form-control input-sm" id="txt_zone" placeholder="ระบุ ชื่อโซน หรือ ยิงบาร์โค้ดโซน" style="text-align:center;" autofocus />
     </div>
     <div class="col-lg-1">
     	<button type="button" class="btn btn-primary btn-sm" id="btn_ok" onclick="get_zone()"><i class="fa fa-check-square-o"></i>&nbsp; ตรวจนับ</button>
@@ -89,7 +89,7 @@
             <td align="center"><?php echo number_format($rs['qty']); ?><input type="hidden" id="qty_<?php echo $id; ?>" name="qty[<?php echo $id; ?>]" value="<?php echo $rs['qty']; ?>" /></td>
             <td align="center">
 				<?php if($edit) : ?>
-            	<input type="text" class="form-control input-sm" style="text-align:center;" id="qty_check_<?php echo $id; ?>" name="qty_check[<?php echo $id; ?>]" onkeyup="check_number($(this))" value="<?php echo $diff + $rs['qty']; ?>" />
+            	<input type="text" class="form-control input-sm" style="text-align:center;" id="qty_check_<?php echo $id; ?>" name="qty_check[<?php echo $id; ?>]" onkeyup="check_number($(this))" value="<?php echo ($diff*-1) + $rs['qty']; ?>" />
                 <?php endif; ?>
            </td>
            <td align="center">
@@ -149,7 +149,7 @@
 <?php else : ?>
 <div class="row">
 	<div class="col-lg-3 col-lg-offset-4">
-    	<input type="text" class="form-control input-sm" id="txt_zone" placeholder="ระบุ ชื่อโซน หรือ ยิงบาร์โค้ดโซน" style="text-align:center;" />
+    	<input type="text" class="form-control input-sm" id="txt_zone" placeholder="ระบุ ชื่อโซน หรือ ยิงบาร์โค้ดโซน" style="text-align:center;" autofocus />
     </div>
     <div class="col-lg-1">
     	<button type="button" class="btn btn-primary btn-sm" id="btn_ok" onclick="get_zone()"><i class="fa fa-check-square-o"></i>&nbsp; ตรวจนับ</button>
@@ -171,9 +171,13 @@
 $(document).ready(function(e) {
     if($("#saved").length > 0 )
 	{
-		swal({ title: "เรียบร้อย", text : "บันทึกยอดต่างเรียบร้อยแล้ว", timer: 1000, type: "success"});	
+		swal({ title: "เรียบร้อย", text : "บันทึกยอดต่างเรียบร้อยแล้ว", timer: 1000, type: "success"}, function(){ $("#txt_zone").focus();});	
 	}
 });
+
+
+
+
 
 function add_product()
 {
@@ -266,6 +270,7 @@ function save_checked(id, id_zone)
 					$("#checked_"+id).css("display", "block");
 					load_out();
 					swal({ title: "เรียบร้อย", text : "บันทึกยอดต่างเรียบร้อยแล้ว", timer: 1000, type : "success" });
+					$("#txt_zone").focus();
 				}else{
 					load_out();
 					swal("บันทึกไม่สำเร็จ");
@@ -321,4 +326,14 @@ $("#txt_zone").keyup(function(e) {
 		}
 	}
 });
+
+function setFocus(el, time){
+		setTimeout(function(){ if( ! $('.form-control').is(':focus') ){ el.focus();}},time);
+}
+
+$("#txt_zone").focusout(function(){
+	setFocus($("#txt_zone"),1000);
+});
+
+
 </script>
