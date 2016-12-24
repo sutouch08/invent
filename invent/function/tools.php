@@ -1,5 +1,18 @@
 <?php  
 
+function getCategoryMaxDepth()
+{
+	$sc = 1;
+	$qs = dbQuery("SELECT MAX(level_depth) AS max FROM tbl_category LIMIT 1");
+	$rs = dbFetchObject($qs);
+	if(! is_null($rs->max) )
+	{
+		$sc = $rs->max;
+	}
+
+	return $sc;
+}
+
 //-----------------------  ส่งกลับ id_customer ที่คั่นด้วย , เพื่อนำไปใช้กับ query
 function customer_in($txt)
 {

@@ -66,6 +66,8 @@ function hasSubCategory($id_category)
 	return $sc;
 }
 
+
+
 function categoryTree($id_pd)
 {
 	$sc 		= '<ul class="tree">';
@@ -110,6 +112,12 @@ function categoryTree($id_pd)
 	$sc .= '</script>';
 	return $sc;
 }
+
+
+
+
+
+
 function subCategory($parent, $id_pd = '')
 {
 	$sc = '';

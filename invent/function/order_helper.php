@@ -1,5 +1,120 @@
 <?php
 
+function haveSubCategory($id_category)
+{
+	$sc = FALSE;
+	$qs = dbQuery("SELECT id_category FROM tbl_category WHERE parent_id = ".$id_category);
+	if( dbNumRows($qs) > 0 )
+	{
+		$sc = TRUE;
+	}
+	return $sc;
+}
+
+function categoryTabMenu($mode = 'order')
+{
+	$ajax = $mode == 'order' ? 'getCategory' : 'getViewCategory';
+	$sc = '';
+	$level = 1;
+	$qs = dbQuery("SELECT * FROM tbl_category WHERE level_depth = ".$level." ORDER BY category_name ASC");
+	while( $rs = dbFetchObject($qs))
+	{
+		if( haveSubCategory($rs->id_category) === TRUE)
+		{
+			$sc .= '<li class="dropdown" onmouseover="expandCategory((this))" onmouseout="collapseCategory((this))">';
+			$sc .= '<a id="ul-'.$rs->id_category.'" class="dropdown-toggle" role="tab" data-toggle="tab" href="#cat-'.$rs->id_category.'" onClick="'.$ajax.'('.$rs->id_category.')" >';
+			$sc .=  $rs->category_name.'<span class="caret"></span></a>';
+			$sc .= 	'<ul class="dropdown-menu" role="menu" aria-labelledby="ul-'.$rs->id_category.'">';
+			$sc .= 	subCategoryTab($rs->id_category, $ajax);
+			$sc .=  '</ul>';
+			$sc .= '</li>';			
+		}
+		else
+		{
+			$sc .= '<li class=""><a href="#cat-'.$rs->id_category.'" role="tab" data-toggle="tab" onClick="'.$ajax.'('.$rs->id_category.')">'.$rs->category_name.'</a></li>';
+		}
+	}
+	return $sc;
+
+}
+
+//-- this function to view category product in order page
+function subCategoryTab($parent, $ajax)
+{
+	$sc = '';
+	$qs = dbQuery("SELECT * FROM tbl_category WHERE parent_id = ".$parent." ORDER BY category_name ASC");
+	
+	if( dbNumRows($qs) > 0 )
+	{
+		while( $rs = dbFetchObject($qs) )
+		{
+			if( haveSubCategory($rs->id_category) === TRUE ) //----- ถ้ามี sub category 
+			{
+				$sc .= '<li class="dropdown-submenu" >';
+				$sc .= '<a id="ul-'.$rs->id_category.'" class="dropdown-toggle" href="#cat-'.$rs->id_category.'" role="tab" data-toggle="tab" onClick="'.$ajax.'('.$rs->id_category.')">';
+				$sc .=  $rs->category_name.'</a>';
+				$sc .= 	'<ul class="dropdown-menu" role="menu" aria-labelledby="ul-'.$rs->id_category.'">';
+				$sc .= 	getSubCategoryTab($rs->id_category, $ajax);
+				$sc .=  '</ul>';
+				$sc .= '</li>';
+			}
+			else
+			{
+				$sc .= '<li class=""><a href="#cat-'.$rs->id_category.'" role="tab" data-toggle="tab" onClick="'.$ajax.'('.$rs->id_category.')">'.$rs->category_name.'</a></li>';
+			}
+			
+		}
+	}
+	return $sc;
+}
+
+
+//-- this function to view category product in order page
+function getSubCategoryTab($parent, $ajax)
+{
+	$sc = '';
+	$qs = dbQuery("SELECT * FROM tbl_category WHERE parent_id = ".$parent." ORDER BY category_name ASC");
+	
+	if( dbNumRows($qs) > 0 )
+	{
+		while( $rs = dbFetchObject($qs) )
+		{
+			if( haveSubCategory($rs->id_category) === TRUE ) //----- ถ้ามี sub category 
+			{
+				$sc .= '<li class="dropdown-submenu" >';
+				$sc .= '<a id="ul-'.$rs->id_category.'" class="dropdown-toggle" href="#cat-'.$rs->id_category.'" data-toggle="tab" onClick="'.$ajax.'('.$rs->id_category.')">';
+				$sc .=  $rs->category_name.'</a>';
+				$sc .= 	'<ul class="dropdown-menu" role="menu" aria-labelledby="ul-'.$rs->id_category.'">';
+				$sc .= 	subCategoryTab($rs->id_category, $ajax);
+				$sc .=  '</ul>';
+				$sc .= '</li>';
+			}
+			else
+			{
+				$sc .= '<li class=""><a href="#cat-'.$rs->id_category.'" role="tab" data-toggle="tab" onClick="'.$ajax.'('.$rs->id_category.')">'.$rs->category_name.'</a></li>';
+			}
+			
+		}
+	}
+	return $sc;
+}
+
+
+
+function getCategoryTab()
+{
+	$sc = '';
+	$qs = dbQuery("SELECT * FROM tbl_category WHERE id_category != 0"); 
+	while($rs = dbFetchObject($qs))
+	{
+		$sc .= '<div class="tab-pane" id="cat-'.$rs->id_category.'"></div>';
+	}
+	
+	return $sc;
+}
+
+
+
 function getOrderDetail($id_order_detail)
 {
 	$sc = FALSE;
