@@ -600,7 +600,14 @@ switch($page){
 			$content="export_product_db.php";
 			$pageTitle = "ส่งออกฐานข้อมูลสินค้า";
 			break;
-
+		case "export_stock_zone" :
+			$content = "export_stock_db.php";
+			$pageTitle = "ส่งออกยอดยกไปคงเหลือปลายงวด";
+			break;
+		case "import_stock_zone" :
+			$content = "import_stock_db.php";
+			$pageTitle = "นำเข้ายอดยกมาต้นงวด";
+			break;
 		default:
 			$content = 'main.php';
 			$pageTitle = 'Smart Inventory';

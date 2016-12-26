@@ -10,6 +10,8 @@
 	$delete = $pm['delete'];
 	accessDeny($view);
 	include "function/support_helper.php";
+	require 'function/product_helper.php';
+	require 'function/qc_helper.php';
 	function get_temp_qty($id_order, $id_product_attribute)
 	{
 		$qty = 0;
@@ -159,15 +161,17 @@
             <th style="width:10%; text-align:center">มูลค่า</th>
 		</thead>     
         <!------------------------------  Start  ------------------>
+           
         <?php if($role != 5 ) : ?>  
 		<?php	$qr = dbQuery("SELECT * FROM tbl_order_detail WHERE id_order = ".$id_order);  ?>
         <?php 	$n = 1; $total_amount = 0; $total_discount = 0; $full_amount = 0; $total_qty = 0; $total_valid_qty = 0; $total_temp= 0; ?>
         <?php 	while($rr = dbFetchArray($qr) ) : 													?>
+        <?php 		$isVisual = isVisual($rr['id_product_attribute']) == 1 ? TRUE : FALSE; ?>
         <?php 		$order_qty 	= $rr['product_qty']; 												?>
         <?php 		$id_product_attribute = $rr['id_product_attribute']; 						?>
-        <?php		$sold 	= get_sold_data($id_order, $id_product_attribute);				?>
-        <?php		$temp_qty 	= get_temp_qty($id_order, $rr['id_product_attribute']); 	?>
-        <?php 		$sold_qty 	= $sold == false ? 0 : $sold['sold_qty'];												 	?>
+        <?php		$sold 	= $isVisual === TRUE ? FALSE : get_sold_data($id_order, $id_product_attribute);	?>
+        <?php		$temp_qty 	= $isVisual === TRUE ? $order_qty : get_temp_qty($id_order, $rr['id_product_attribute']); 	?>
+        <?php 		$sold_qty 	= $isVisual === TRUE ? $order_qty : ($sold === FALSE ? 0 : $sold['sold_qty'] );			?>
         <?php 		if($order_qty != $sold_qty || $sold_qty != $temp_qty ) { $hilight = " color: red;"; }else{ $hilight = ""; } ?>
         <?php 		$p_name = $rr['product_reference']. " : ". $rr['product_name']; 			?>
          <?php 		$p_name = substr($p_name, 0, 100); 											?>

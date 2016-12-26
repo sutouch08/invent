@@ -9,7 +9,7 @@ if( isset( $_GET['getTopTable'] ) )
 {
 	$sc = 'fail';
 	$id_order 	= $_POST['id_order'];
-	$qs = dbQuery("SELECT * FROM tbl_order_detail WHERE id_order = ".$id_order." AND valid_detail = 0 ORDER BY id_product_attribute ASC");
+	$qs = dbQuery("SELECT tbl_order_detail.* FROM tbl_order_detail JOIN tbl_product ON tbl_order_detail.id_product = tbl_product.id_product WHERE id_order = ".$id_order." AND valid_detail = 0 AND is_visual = 0 ORDER BY id_product_attribute ASC");
 	if( dbNumRows($qs) > 0 )
 	{
 		$ds 		= array();
@@ -43,7 +43,7 @@ if( isset( $_GET['getLastTable'] ) )
 {
 	$sc = 'fail';
 	$id_order 	= $_POST['id_order'];
-	$qs = dbQuery("SELECT * FROM tbl_order_detail WHERE id_order = ".$id_order." AND valid_detail = 1 ORDER BY id_product_attribute ASC");
+	$qs = dbQuery("SELECT tbl_order_detail.* FROM tbl_order_detail JOIN tbl_product ON tbl_order_detail.id_product = tbl_product.id_product WHERE id_order = ".$id_order." AND (valid_detail = 1 OR is_visual = 1) ORDER BY id_product_attribute ASC");
 	if( dbNumRows($qs) > 0 )
 	{
 		$ds 		= array();

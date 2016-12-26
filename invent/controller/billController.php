@@ -90,7 +90,6 @@ if(isset($_GET['confirm_order'])&&isset($_GET['id_order']))
 				$id_warehouse = $row['id_warehouse'];
 				$product = new product();
 				$id_product = $product->getProductId($id_product_attribute);
-				//$rd = sold_product($id_order, $id_product_attribute, $qty);
 				$ra = dbQuery("UPDATE tbl_temp SET status = 4  WHERE id_temp IN( SELECT id_temp FROM (SELECT id_temp FROM tbl_temp WHERE id_order = ".$id_order." AND id_product_attribute = ".$id_product_attribute." LIMIT ".$qty.") tmp)"); 
 				$rb = update_buffer_zone($new_qty, $id_product, $id_product_attribute, $id_order, $from_zone, $id_warehouse, $id_employee);
 				$rc = stock_movement("out", 3, $id_product_attribute, $id_warehouse, $qty, $order->reference, $date_upd, $from_zone);
@@ -392,7 +391,7 @@ if( isset( $_GET['print_order_barcode']) && isset( $_GET['id_order'] ) )
 					$rs = dbFetchArray($detail);
 					if(count($rs) != 0) :
 						$sold 				= get_sold_data($id_order, $rs['id_product_attribute']);
-						$barcode		= $sold == false ? $rs['barcode'] : "<img src='".WEB_ROOT."library/class/barcode/barcode.php?text=".$rs['barcode']."' style='height:8mm;' />";
+						$barcode		= $sold == false ? $rs['barcode'] : ($rs['barcode'] == '' ? '' : "<img src='".WEB_ROOT."library/class/barcode/barcode.php?text=".$rs['barcode']."' style='height:8mm;' />");
 						$pre = ""; $post = "";
 						if($sold != false && $sold['sold_qty'] != $rs['product_qty'])
 						{

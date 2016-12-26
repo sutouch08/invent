@@ -870,7 +870,6 @@ $('#modal_approve_edit').on('shown.bs.modal', function () {  $('#edit_bill_passw
   		}
 	}
 
-	//$('.dropdown').mouseenter($(this).addClass('open')).mouseleave($(this).removeClass('open'));
 
 
 

@@ -2657,13 +2657,8 @@ function sold_product($id_order, $id_pa, $qty)
 		$qr .= "order_qty, sold_qty, reduction_percent, reduction_amount, discount_amount, final_price, total_amount, cost, total_cost)";
 		$qr .= " VALUES ";
 		$qr .= "(".$id_order.", '".$ref."', ".$role.", ".$id_cus.", ".$id_emp.", ".$id_sale.", ".$id_pd.", ".$id_pa.", '".$p_name."', '".$p_ref."', '".$barcode."', ";
-		$qr .= $price.", ".$order_qty.", ".$qty.", ".$p_dis.", ".$a_dis.", ".$dis_amount.", ".$final_price.", ".$total_amount.", ".$cost.", ".$total_cost.")";
-			
-		$sq = dbQuery($qr);
-		if( $sq === FALSE )
-		{
-			$sc = FALSE;	
-		}
+		$qr .= $price.", ".$order_qty.", ".$qty.", ".$p_dis.", ".$a_dis.", ".$dis_amount.", ".$final_price.", ".$total_amount.", ".$cost.", ".$total_cost.")";		
+		$sc = dbQuery($qr);
 	}
 	else
 	{
@@ -2688,6 +2683,16 @@ function order_sold($id_order)
 	
 	$result	= TRUE;
 	
+	$qr 		= dbQuery("SELECT id_product_attribute, product_qty AS qty FROM tbl_order_detail JOIN tbl_product ON tbl_order_detail.id_product = tbl_product.id_product WHERE id_order = ".$id_order." AND is_visual = 1");
+	if( dbNumRows($qr) > 0 )
+	{
+		while( $rs = dbFetchArray($qr) )
+		{
+			$id_pa 	= $rs['id_product_attribute'];
+			$qty	 	= $rs['qty'];
+			sold_product($id_order, $id_pa, $qty);
+		}
+	}
 	$qs 		= dbQuery('SELECT id_product_attribute, SUM(qty) AS qty FROM tbl_qc WHERE id_order = '.$id_order.' AND valid = 1 GROUP BY id_product_attribute');
 	if( dbNumRows($qs) > 0 )
 	{
@@ -2735,13 +2740,7 @@ function order_sold($id_order)
 	
 	return $result;
 }
-
-
-
-
-
-
-	 
+ 
 	 
 	 function get_zone($id_zone){
 		 list($name_zone) = dbFetchArray(dbQuery("SELECT zone_name FROM tbl_zone WHERE id_zone = $id_zone"));

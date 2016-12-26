@@ -101,6 +101,34 @@ if( isset( $_GET['export_product'] ) && isset( $_POST['export'] ) )
 }
 
 
+if( isset( $_GET['export_stock_zone'] ) )
+{
+	$qs = dbQuery("SELECT barcode_zone, reference, qty FROM tbl_stock JOIN tbl_zone ON tbl_stock.id_zone = tbl_zone.id_zone JOIN tbl_product_attribute ON tbl_stock.id_product_attribute = tbl_product_attribute.id_product_attribute WHERE qty != 0");
+	$excel = new PHPExcel();
+	$excel->setActiveSheetIndex(0);
+	$excel->getActiveSheet()->setTitle("stock_in_zone");
+	$excel->getActiveSheet()->setCellValue('A1', 'barcodeZone');
+	$excel->getActiveSheet()->setCellValue('B1', 'item_code');
+	$excel->getActiveSheet()->setCellValue('C1', 'qty');
+	$row = 2;
+	if( dbNumRows($qs) > 0 )
+	{
+		while($rs = dbFetchObject($qs) )
+		{
+			$excel->getActiveSheet()->setCellValue('A'.$row, trim($rs->barcode_zone));
+			$excel->getActiveSheet()->setCellValue('B'.$row, trim($rs->reference));
+			$excel->getActiveSheet()->setCellValue('C'.$row, $rs->qty);
+			$row++;
+		}
+	}
+	$file_name = "stock_in_zone_".date("d")."_".date("m")."_".(date("Y")+543).".xlsx";
+	header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); /// form excel 2007 XLSX
+	header('Content-Disposition: attachment;filename="'.$file_name.'"');
+	$writer = PHPExcel_IOFactory::createWriter($excel, 'Excel2007');
+	$writer->save('php://output');
+	setToken($_GET['token']);
+}
+
 if( isset( $_GET['stock_in_zone'] ) && isset( $_GET['export'] ) )
 {
  	$id_zone 	= $_GET['id_zone'];

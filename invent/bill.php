@@ -12,6 +12,8 @@
 	require "function/support_helper.php";
 	require "function/sponsor_helper.php";
 	require 'function/order_helper.php';
+	require 'function/product_helper.php';
+	require 'function/qc_helper.php';
 	function get_temp_qty($id_order, $id_product_attribute)
 	{
 		$qty = 0;
@@ -130,11 +132,12 @@ if(isset($_GET['view_detail'])&&isset($_GET['id_order'])){
             <th style="width:10%; text-align:center">ส่วนลด</th>
             <th style="width:10%; text-align:center">มูลค่า</th>
 		</thead>     
-        <?php $qr = dbQuery("SELECT * FROM tbl_order_detail WHERE id_order = ".$id_order); ?>
+        <?php $qr = dbQuery("SELECT tbl_order_detail.*, is_visual FROM tbl_order_detail JOIN tbl_product ON tbl_order_detail.id_product = tbl_product.id_product WHERE id_order = ".$id_order); ?>
         <?php 	$n = 1; $total_amount = 0; $total_discount = 0; $full_amount = 0; $total_qty = 0; $total_valid_qty = 0; $total_temp = 0; ?>
         <?php 	while($rs = dbFetchArray($qr) ) : ?>
-       	<?php		list($qty) = dbFetchArray(dbQuery("SELECT SUM(qty) AS qty FROM tbl_qc WHERE id_product_attribute = ".$rs['id_product_attribute']." AND id_order = ".$id_order." AND valid = 1")); ?>
-          <?php		$temp_qty = get_temp_qty($id_order, $rs['id_product_attribute']); ?>
+        <?php 		$isVisual = isVisual($rs['id_product_attribute']) == 1 ? TRUE : FALSE; ?>
+        <?php 		$qty = $isVisual === TRUE ? $rs['product_qty'] : sumCheckedQty($id_order, $rs['id_product_attribute']) ; ?>
+        <?php		$temp_qty = $isVisual === TRUE ? $rs['product_qty'] : get_temp_qty($id_order, $rs['id_product_attribute']); ?>
         <?php		if($rs['product_qty'] != $qty || $qty != $temp_qty){ $hilight = " color: red;"; }else{ $hilight = ""; } ?>
          <?php 			$p_name = $rs['product_reference']. " : ". $rs['product_name']; ?>
          <?php 			$p_name = substr($p_name, 0, 100); ?>
