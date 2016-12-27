@@ -16,7 +16,37 @@
 <hr style='border-color:#CCC; margin-top: 0px; margin-bottom:10px;' />
 
 <div class="row">
-
+	
+	<form id="upload-form" name="upload-form" method="post" enctype="multipart/form-data">
+        <div class="col-sm-12">
+        <input type="file" name="uploadFile" id="uploadFile" accept=".xlsx" style="border:solid 1px #CCC; display:inline;"  />
+        <button type="button" class="btn btn-sm btn-info" onclick="uploadfile()"><i class="fa fa-cloud-upload"></i> ตกลง</button>
+        <input type="hidden" name="555" />
+        </div>
+    </form>
+	
 </div>
 
 </div><!-- container -->
+<script>
+	function uploadfile()
+	{
+		var file	= $("#uploadFile")[0].files[0];
+		var fd = new FormData();
+		fd.append('uploadFile', $('input[type=file]')[0].files[0]);
+		if( file !== '')
+		{
+			load_in();
+			$.ajax({
+				url:"controller/importController.php?importStockZone",
+				type:"POST", cache:"false", data: fd, processData:false, contentType: false,
+				success: function(rs){
+					load_out();
+					var rs = $.trim(rs);
+					var rs = $.parseJSON(rs);
+					console.log(rs);
+				}
+			});
+		}
+	}
+</script>
