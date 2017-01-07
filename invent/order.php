@@ -769,10 +769,10 @@ $('#modal_approve_edit').on('shown.bs.modal', function () {  $('#edit_bill_passw
                 <th style='width:20%;'>ลูกค้า</th>
                 <th style='width:10%;'>พนักงาน</th>
                 <th style='width:10%; text-align:center;'>ยอดเงิน</th>
-                <th style='width:15%; text-align:center;'>การชำระเงิน</th>
+                <th style='width:10%; text-align:center;'>การชำระเงิน</th>
                 <th style='width:10%; text-align:center;'>สถานะ</th>
-                <th style='width:10%; text-align:center;'>วันที่เพิ่ม</th>
-                <th style='width:10%; text-align:center;'>วันที่ปรับปรุง</th>
+                <th style='width:8%; text-align:center;'>วันที่เพิ่ม</th>
+                <th style='width:15%; text-align:center;'>วันที่ปรับปรุง</th>
             </thead>
 <?php	$qs = dbQuery("SELECT * FROM tbl_order ".$where." LIMIT ".$paginator->Page_Start." , ".$paginator->Per_Page);		?>
 <?php	if( dbNumRows($qs) > 0) :		?>
@@ -792,7 +792,7 @@ $('#modal_approve_edit').on('shown.bs.modal', function () {  $('#edit_bill_passw
 				<td align='center' style='cursor:pointer;' onclick="viewOrder(<?php echo $id; ?>)"><?php echo $order->payment; ?></td>
 				<td align='center' style='cursor:pointer;' onclick="viewOrder(<?php echo $id; ?>)"><?php echo $order->current_state_name; ?></td>
 				<td align='center' style='cursor:pointer;' onclick="viewOrder(<?php echo $id; ?>)"><?php echo thaiDate($order->date_add); ?></td>
-				<td align='center' style='cursor:pointer;' onclick="viewOrder(<?php echo $id; ?>)"><?php echo thaiDate($order->date_upd); ?></td>
+				<td align='center' style='cursor:pointer;' onclick="viewOrder(<?php echo $id; ?>)"><?php echo thaiDateTime($order->date_upd); ?></td>
 			</tr>
 <?php		else : ?>
 			<tr style='color:#FFF; background-color:#434A54; font-size:12px;'>
@@ -804,7 +804,7 @@ $('#modal_approve_edit').on('shown.bs.modal', function () {  $('#edit_bill_passw
 				<td align='center'><?php echo $order->payment; ?></td>
 				<td align='center'><?php echo $order->current_state_name; ?></td>
 				<td align='center'><?php echo thaiDate($order->date_add); ?></td>
-				<td align='center'><?php echo thaiDate($order->date_upd); ?></td>
+				<td align='center'><?php echo thaiDateTime($order->date_upd); ?></td>
 			</tr>            
 <?php			endif; ?>            
 <?php	endwhile; ?>		
@@ -869,10 +869,7 @@ $('#modal_approve_edit').on('shown.bs.modal', function () {  $('#edit_bill_passw
 			el.className=el.className.replace(reg, ' ')
   		}
 	}
-
-
-
-
 </script>
 
 <script src="script/order.js"></script>
+>>>

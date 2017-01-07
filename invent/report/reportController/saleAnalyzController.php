@@ -13,7 +13,8 @@ if( isset( $_GET['soldProductDeepAnalyz'] ) )
 	$from = fromDate($_GET['from']);
 	$to	= toDate($_GET['to']);
 	$vat	= getConfig('VAT');
-	$pGroup	= getConfig('ITEMS_GROUP');
+	$pred = date("dmY", strtotime($from)) .' - '. date("dmY", strtotime($to));
+	//$pGroup	= getConfig('ITEMS_GROUP');
 	$excel	= new PHPExcel();
 	
 	$excel->getProperties()->setCreator("Samart Invent")
@@ -25,6 +26,7 @@ if( isset( $_GET['soldProductDeepAnalyz'] ) )
 							 ->setCategory("Sale Report");
 	$excel->setActiveSheetIndex(0);
 	$excel->getActiveSheet()->setTitle('รายงานวิเคราะห์ขายแบบละเอียด');
+	/*
 	$excel->getActiveSheet()->setCellValue('A1', 'รายงานวิเคราะห์ขายแบบละเอียด');
 	$excel->getActiveSheet()->setCellValue('A2', 'วันที่');
 	$excel->getActiveSheet()->setCellValue('B2', thaiDate($from, '/').' - '.thaiDate($to, '/') );
@@ -32,35 +34,37 @@ if( isset( $_GET['soldProductDeepAnalyz'] ) )
 	$excel->getActiveSheet()->setCellValue('B3', $roleName);
 	$excel->getActiveSheet()->setCellValue('D3', 'VAT');
 	$excel->getActiveSheet()->setCellValue('E3', $vat.' %');
+	*/
 	
 	//---------  หัวตาราง  ------------//
-	$excel->getActiveSheet()->setCellValue('A4', 'sold_date');
-	$excel->getActiveSheet()->setCellValue('B4', 'product');
-	$excel->getActiveSheet()->setCellValue('C4', 'color');
-	$excel->getActiveSheet()->setCellValue('D4', 'size');
-	$excel->getActiveSheet()->setCellValue('E4', 'attribute');
-	$excel->getActiveSheet()->setCellValue('F4', 'category');
-	$excel->getActiveSheet()->setCellValue('G4', 'cost_ex');
-	$excel->getActiveSheet()->setCellValue('H4', 'cost_inc');
-	$excel->getActiveSheet()->setCellValue('I4', 'price_ex');
-	$excel->getActiveSheet()->setCellValue('J4', 'price_inc');
-	$excel->getActiveSheet()->setCellValue('K4', 'sell_ex');
-	$excel->getActiveSheet()->setCellValue('L4', 'sell_inc');
-	$excel->getActiveSheet()->setCellValue('M4', 'qty');
-	$excel->getActiveSheet()->setCellValue('N4', 'discount');
-	$excel->getActiveSheet()->setCellValue('O4', 'amount_ex');
-	$excel->getActiveSheet()->setCellValue('P4', 'amount_inc');
-	$excel->getActiveSheet()->setCellValue('Q4', 'type');
-	$excel->getActiveSheet()->setCellValue('R4', 'customer');
-	$excel->getActiveSheet()->setCellValue('S4', 'saleman');
-	$excel->getActiveSheet()->setCellValue('T4', 'area');
-	$excel->getActiveSheet()->setCellValue('U4', 'group');
+	$excel->getActiveSheet()->setCellValue('A1', 'sold_date');
+	$excel->getActiveSheet()->setCellValue('B1', 'product');
+	$excel->getActiveSheet()->setCellValue('C1', 'color');
+	$excel->getActiveSheet()->setCellValue('D1', 'size');
+	$excel->getActiveSheet()->setCellValue('E1', 'attribute');
+	$excel->getActiveSheet()->setCellValue('F1', 'category');
+	$excel->getActiveSheet()->setCellValue('G1', 'cost_ex');
+	$excel->getActiveSheet()->setCellValue('H1', 'cost_inc');
+	$excel->getActiveSheet()->setCellValue('I1', 'price_ex');
+	$excel->getActiveSheet()->setCellValue('J1', 'price_inc');
+	$excel->getActiveSheet()->setCellValue('K1', 'sell_ex');
+	$excel->getActiveSheet()->setCellValue('L1', 'sell_inc');
+	$excel->getActiveSheet()->setCellValue('M1', 'qty');
+	$excel->getActiveSheet()->setCellValue('N1', 'discount');
+	$excel->getActiveSheet()->setCellValue('O1', 'amount_ex');
+	$excel->getActiveSheet()->setCellValue('P1', 'amount_inc');
+	$excel->getActiveSheet()->setCellValue('Q1', 'type');
+	$excel->getActiveSheet()->setCellValue('R1', 'customer');
+	$excel->getActiveSheet()->setCellValue('S1', 'saleman');
+	$excel->getActiveSheet()->setCellValue('T1', 'area');
+	$excel->getActiveSheet()->setCellValue('U1', 'group');
+	$excel->getActiveSheet()->setCellValue('V1', 'emp');
 	
 	$qs = dbQuery("SELECT * FROM tbl_order_detail_sold WHERE id_role IN(".$role_in.") AND date_upd > '".$from."' AND date_upd < '".$to."' ORDER BY id_product ASC");
 	
 	if( dbNumRows($qs) > 0 )
 	{
-		$row	= 5;  //------ เริ่มต้นแถวที่ 5
+		$row	= 2;  //------ เริ่มต้นแถวที่ 2
 		while( $rs = dbFetchArray($qs) )
 		{
 			$pa	= getProductAttribute($rs['id_product_attribute']);  //------  return as array $pa['id_color'], $pa['id_size'], $pa['id_attribute']
@@ -89,21 +93,22 @@ if( isset( $_GET['soldProductDeepAnalyz'] ) )
 			$excel->getActiveSheet()->setCellValue('R'.$row, customer_name($rs['id_customer']) ); //--- ร้านค้า
 			$excel->getActiveSheet()->setCellValue('S'.$row, sale_name($rs['id_sale']) ); //--- พนักงานขาย
 			$excel->getActiveSheet()->setCellValue('T'.$row, customerDefaultGroupName($rs['id_customer']) ); //---- เขตการขาย
-			$excel->getActiveSheet()->setCellValue('U'.$row, $pGroup);
+			$excel->getActiveSheet()->setCellValue('U'.$row, getProductGroupName($rs['id_product']));
+			$excel->getActiveSheet()->setCellValue('V'.$row, employee_name($rs['id_employee'])); //---- พนักงานผู้ทำรายการ
 			
 			$row++;			
 			
 		}//----- end while 		
 		
-		$excel->getActiveSheet()->getStyle('A5:A'.$row)->getNumberFormat()->setFormatCode('dd/mm/yyyy');
-		$excel->getActiveSheet()->getStyle('G5:L'.$row)->getNumberFormat()->setFormatCode('#,##0.00');
-		$excel->getActiveSheet()->getStyle('M5:M'.$row)->getNumberFormat()->setFormatCode('#,##0');
-		$excel->getActiveSheet()->getStyle('N5:P'.$row)->getNumberFormat()->setFormatCode('#,##0.00');
+		$excel->getActiveSheet()->getStyle('A2:A'.$row)->getNumberFormat()->setFormatCode('dd/mm/yyyy');
+		$excel->getActiveSheet()->getStyle('G2:L'.$row)->getNumberFormat()->setFormatCode('#,##0.00');
+		$excel->getActiveSheet()->getStyle('M2:M'.$row)->getNumberFormat()->setFormatCode('#,##0');
+		$excel->getActiveSheet()->getStyle('N2:P'.$row)->getNumberFormat()->setFormatCode('#,##0.00');
 		
 	}
 	
 	setToken($_GET['token']);
-	$file_name = "รายงานวิเคราะห์ขายแบบละเอียด.xlsx";
+	$file_name = "รายงานวิเคราะห์ขายแบบละเอียด".$pred.".xlsx";
 	header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); /// form excel 2007 XLSX
 	header('Content-Disposition: attachment;filename="'.$file_name.'"');
 	$writer = PHPExcel_IOFactory::createWriter($excel, 'Excel2007');

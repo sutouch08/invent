@@ -12,6 +12,7 @@
 	if($edit==1){ $can_edit = "";}else{ $can_edit = "style='display:none;'"; }
 	if($delete==1){ $can_delete = "";}else{ $can_delete ="style='display:none;'"; }	
 	include "function/sponsor_helper.php";
+	require "function/order_helper.php";
 	 if(isset( $_GET['id_order'] )) : 
 			$id_order = $_GET['id_order'];
 			$id_order_sponsor = isset($_GET['id_order_sponsor'])? $_GET['id_order_sponsor'] : get_id_order_sponsor($id_order);
@@ -66,7 +67,8 @@
     
 <!-----------------------------------------  ADD  ------------------------------------------->
 
-<div class="row"><form action="controller/sponsorController.php?add_order" method="post">
+<div class="row">
+<form action="controller/sponsorController.php?add_order" method="post">
 	<div class="col-lg-3">
     	<div class="input-group">
         	<span class="input-group-addon">เลขที่เอกสาร</span>
@@ -159,11 +161,30 @@
 	</div> </form>   
 </div>   
 <hr style='border-color:#CCC; margin-top: 10px; margin-bottom:10px;' /> 
+<!----------------------------------------- Category Menu ---------------------------------->
+<div class='row'>
+	<div class='col-sm-12'>
+		<ul class='nav navbar-nav' role='tablist' style='background-color:#EEE'>
+		<?php echo categoryTabMenu('order'); ?>
+		</ul>
+	</div><!---/ col-sm-12 ---->
+</div><!---/ row -->
+<hr style='border-color:#CCC; margin-top: 0px; margin-bottom:0px;' />
+<div class='row'>
+	<div class='col-sm-12'>		
+		<div class='tab-content' style="min-height:1px; padding:0px;">
+		<?php echo getCategoryTab(); ?>
+		</div>
+	</div>
+</div>
+<!------------------------------------ End Category Menu ------------------------------------>	
+
 <!--	//*********************************  เริ่ม ORDER GRID ******************************************//  -->
+<!--
 	<div class='row'>
 	<div class='col-lg-12 col-md-12 col-sm-12 col-sx-12'>
 	<ul class='nav nav-tabs' role='tablist' style='background-color:#EEE'>
-	<?php 
+	<?php /*
 				$sql = dbQuery("SELECT id_category, category_name FROM tbl_category WHERE parent_id = 0 AND level_depth = 1 ORDER BY position ASC");
 				$row = dbNumRows($sql);
 				$i=0;
@@ -227,11 +248,13 @@
 		$r++;
 		echo "</div>";
 	}	
-	echo"</div> <button data-toggle='modal' data-target='#order_grid' id='btn_toggle' style='display:none;'>toggle</button>
+	echo"</div> 
 </div></div>";	
-//************************************ จบ ORDER GRID **********************************************//		
+
+//************************************ จบ ORDER GRID **********************************************/		
 ?>
-		
+		-->
+        <button data-toggle='modal' data-target='#order_grid' id='btn_toggle' style='display:none;'>toggle</button>
 	<form action='controller/sponsorController.php?add_to_order' method='post'>
 	<div class='modal fade' id='order_grid' tabindex='-1' role='dialog' aria-labelledby='myModalLabel' aria-hidden='true'>
 								  <div class='modal-dialog' id='modal'>
@@ -844,4 +867,28 @@ function print_order(id)
 	window.open("controller/orderController.php?print_order&id_order="+id, "_blank", "width=900, height=1000, left="+left+", location=no, scrollbars=yes");	
 }
 
+//--------------------------------  โหลดรายการสินค้าสำหรับจิ้มสั่งสินค้า  -----------------------------//
+function getCategory(id) {
+    var output = $("#cat-" + id);
+    if (output.html() == '') {
+        load_in();
+        $.ajax({
+            url: "controller/orderController.php?getCategoryProductGrid",
+            type: "POST",
+            cache: "false",
+            data: { "id_category": id },
+            success: function(rs) {
+                load_out();
+                var rs = $.trim(rs);
+                if (rs != 'no_product') {
+                    output.html(rs);
+                } else {
+                    output.html('<center><h4>ไม่พบสินค้าในหมวดหมู่ที่เลือก</h4></center>');
+                    $('.tab-pane').removeClass('active');
+                    output.addClass('active');
+                }
+            }
+        });
+    }
+}
 </script>

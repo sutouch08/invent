@@ -1,3 +1,5 @@
+
+
 $(document).ready(function(e) {
     $("#increase").numberOnly();
 	$("#decrease").numberOnly();
@@ -49,7 +51,11 @@ $("#decrease").keyup(function(e){
 		if($(this).val() === '' ){
 			$(this).val(0);
 		}
-		insertDetail();	
+		if( $("#id_adjust_detail").val() !== ""){
+			updateDetail();
+		}else{
+			insertDetail();	
+		}
 	}
 });
 
@@ -58,11 +64,10 @@ function insertDetail()
 	var id_adj 	= $("#id_adjust").val();
 	var id_emp	= $("#id_user").val();
 	var id_zone = $("#id_zone").val();
-	var id_wh	= $("#id_wh").val();
 	var id_pa	= $("#id_pa").val();
 	var incr		= $("#increase").val();
 	var decr		= $("#decrease").val();
-	if( id_zone == '' || id_wh == '' ){
+	if( id_zone == '' ){
 		swal('โซนสินค้าไม่ถูกต้อง');
 		return false;
 	}
@@ -78,23 +83,189 @@ function insertDetail()
 	load_in();
 	$.ajax({
 		url:"controller/productAdjustController.php?insertDetail",
-		type:"POST", cache:"false", data:{ "id_adjust" : id_adj, "id_emp" : id_emp, "id_zone" : id_zone, "id_wh" : id_wh, "id_pa" : id_pa, "increase" : incr, "decrease" : decr },
+		type:"POST", cache:"false", data:{ "id_adjust" : id_adj, "id_emp" : id_emp, "id_zone" : id_zone, "id_pa" : id_pa, "increase" : incr, "decrease" : decr },
 		success: function(rs){
 			load_out();
 			var rs = $.trim(rs);
 			if(rs == 'success')
 			{
-				
+				updateAdjustTable();
+				clearInputField();
+			}else{
+				swal(rs);	
 			}
 		}
 	});
 	
 }
 
-function reloadAdjustTable()
+
+
+function save()
 {
-		
+	load_in();
+	var id_adj = $("#id_adjust").val();
+	$.ajax({
+		url:"controller/productAdjustController.php",
+		type:"POST", cache:"false", data:{ "saveAdjust" : "Y", "id_adjust" : id_adj },
+		success: function(rs){
+			load_out();
+			var rs = $.trim(rs);
+			if( rs == 'success' ){
+				swal({ title: "สำเร็จ", text: "บันทึกการปรับยอดเรียบร้อยแล้ว", type: "success", timer: 1000 });		
+			}else{
+				swal("ข้อผิดพลาด", rs, "error");
+			}
+			updateAdjustTable();
+		}
+	});
 }
+
+
+function confirmDelete(id, product)
+{
+	swal({
+        title: 'ต้องการลบ ?',
+        text: 'คุณแน่ใจว่าต้องการลบ ' + product + ' ?',
+        type: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#DD6855',
+        confirmButtonText: 'ใช่ ฉันต้องการลบ',
+        cancelButtonText: 'ยกเลิก',
+        closeOnConfirm: false
+    }, function() {
+        deleteAdjustDetail(id);
+    });
+}
+
+function deleteAdjustDetail(id)
+{
+	var id_adj = $("#id_adjust").val();
+	load_in();
+	$.ajax({
+            url: "controller/productAdjustController.php",
+            type:"POST",
+            cache: "false",
+            data: { "deleteDetail" : "Y", "id_adjust" : id_adj, "id_adjust_detail": id },
+            success: function(rs) {
+				load_out();
+                var rs = $.trim(rs);
+                if (rs == 'success') {
+                    swal({ title: "สำเร็จ", text: "ลบรายการเรียบร้อยแล้ว", timer: 1000, type: "success" });
+                    updateAdjustTable();
+                } else {
+                    swal("ข้อผิดพลาด!!", "ลบรายการไม่สำเร็จ กรุณาลองใหม่อีกครั้ง", "error");
+                }
+            }
+        });	
+}
+
+function editAdjustDetail(id)
+{
+	var id_zone = $("#id_zone_"+id).val();
+	var id_pa 	= $("#id_pa_"+id).val();
+	var zone		= $.trim($("#zone_"+id).text());
+	var product = $.trim($("#product_"+id).text());
+	var add		= $.trim($("#add_"+id).text());
+	var minus	= $.trim($("#minus_"+id).text());
+	
+	$("#id_adjust_detail").val(id);
+	$("#id_zone").val(id_zone);
+	$("#id_pa").val(id_pa);
+	$("#zoneName").val(zone);
+	$("#paCode").val(product);
+	$("#increase").val(add);
+	$("#decrease").val(minus);
+	
+	$("#zoneName").attr("disabled", "disabled");
+	$("#btn-setZone").addClass('hide');
+	$("#btn-changeZone").removeClass('hide');
+	$("#paCode").removeAttr('disabled');
+	$("#increase").removeAttr('disabled');
+	$("#decrease").removeAttr('disabled');
+	$("#btn-insert").addClass('hide');
+	$("#btn-update").removeClass('hide');
+	
+	$("#increase").focus();
+	
+}
+
+
+
+function updateDetail()
+{
+	var id_adj	= $("#id_adjust_detail").val();	
+	var id_pa 	= $("#id_pa").val();
+	var id_zone = $("#id_zone").val();
+	
+	var incr		= $("#increase").val();
+	var decr		= $("#decrease").val();
+	if( id_zone == '' ){
+		swal('โซนสินค้าไม่ถูกต้อง');
+		return false;
+	}
+	if( id_pa == '' ){
+		swal('รหัสสินค้าไม่ถูกต้อง');
+		return false;
+	}
+	if( (incr == '0' && decr == '0' ) || ( incr == decr ) ){
+		swal('จำนวนไม่ถูกต้อง');
+		return false;
+	}
+	
+	load_in();
+	$.ajax({
+		url:"controller/productAdjustController.php?updateDetail",
+		type:"POST", cache:"false", data:{ "id_adjust_detail" : id_adj, "id_zone" : id_zone, "id_pa" : id_pa, "increase" : incr, "decrease" : decr },
+		success: function(rs){
+			load_out();
+			var rs = $.trim(rs);
+			if(rs == 'success')
+			{
+				updateAdjustTable();
+				changeZone();
+			}
+			else
+			{
+				swal(rs);	
+			}
+		}
+	});
+}
+
+
+
+function updateAdjustTable()
+{
+	var id_adj = $("#id_adjust").val();
+	$.ajax({
+		url: "controller/productAdjustController.php",
+		type:"GET", cache:"false", data:{ "getAdjustTable" : "Y", "id_adjust" : id_adj },
+		success: function(rs){
+			var rs = $.trim(rs);
+			if( rs == 'fail' ){
+				swal({ title: 'ข้อผิดพลาด', text: 'ไม่สามารถเข้าถึงข้อมูลได้กรุณาลองใหม่อีกครั้ง', type: 'warning' });
+			}else if( rs == 'nodata' || rs == '' ){
+				$("#result").html('');	
+			}else{
+				var source = $("#adjTableTemplate").html();
+				var data 	= $.parseJSON(rs);
+				var output = $("#result");
+				render(source, data, output);
+			}
+		}
+	});
+}
+
+function clearInputField()
+{
+	$("#paCode").val('');
+	$("#increase").val('');
+	$("#decrease").val('');
+	$("#id_pa").val('');
+	$("#paCode").focus();
+}
+
 
 $("#zoneName").autocomplete({
 	source: "controller/autoComplete.php?getZone",
@@ -107,15 +278,12 @@ $("#zoneName").autocomplete({
 			var ar = rs.split(' | ');
 			var zone_name = ar[0];
 			var id_zone = ar[1];
-			var id_wh	= ar[2];
-			if( ! isNaN(id_zone) && ! isNaN( id_wh) ){
+			if( ! isNaN(id_zone) ){
 				$("#id_zone").val(id_zone);
 				$("#zoneName").val(zone_name);
-				$("#id_wh").val(id_wh);
 				$("#zoneName").removeClass('has-error');
 			}else if( rs != ''){
 				$("#id_zone").val('');
-				$("#id_wh").val('');
 				$("#zoneName").addClass('has-error');
 				swal({ title: 'โซนไม่ถูกต้อง', type: 'warning'}, function(){ $("#zoneName").focus(); });	
 			}
@@ -134,8 +302,7 @@ $("#zoneName").keyup(function(e) {
 function setZone()
 {
 	var id_zone = $("#id_zone").val();
-	var id_wh	= $("#id_wh").val();
-	if( id_zone != '' && id_wh != '' ){
+	if( id_zone != '' ){
 		$("#zoneName").attr('disabled', 'disabled');
 		$(".adj").removeAttr('disabled');
 		$("#btn-setZone").addClass('hide');
@@ -149,12 +316,14 @@ function changeZone()
 	$(".adj").val('');
 	$(".adj").attr('disabled', 'disabled');
 	$("#id_zone").val('');
-	$("#id_wh").val('');
 	$("#id_pa").val('');
+	$("#id_adjust_detail").val('');
 	$("#zoneName").val('');
 	$("#zoneName").removeAttr('disabled');
 	$("#btn-changeZone").addClass('hide');
 	$("#btn-setZone").removeClass('hide');
+	$("#btn-update").addClass('hide');
+	$("#btn-insert").removeClass('hide');
 	$("#zoneName").focus();
 }
 
@@ -268,7 +437,7 @@ function newAdjust()
 
 function editAdjust(id)
 {
-	window.location.href = "index.php?content=ProductAdjust&edit&id_adjust="+id;	
+	window.location.href = "index.php?content=ProductAdjust&add&id_adjust="+id;	
 }
 
 function goBack()

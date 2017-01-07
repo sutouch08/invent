@@ -2,8 +2,105 @@
 require "../../library/config.php";
 require "../../library/functions.php";
 require "../function/tools.php";
+require '../function/stock_helper.php';
+require '../function/adjust_helper.php';
 $id_employee = $_COOKIE['user_id'];
 //----------------- NEW CODE -------------------//
+
+//-------  Save adjust 
+if( isset( $_POST['saveAdjust'] ) )
+{
+	$id_adj 	= $_POST['id_adjust'];	
+	$adj 		= new adjust($id_adj);
+	$qs 		= $adj->getAllDetail($id_adj);
+	$err		= 0;
+	
+	if( dbNumRows($qs) > 0 )
+	{
+		startTransection();
+		while( $rs = dbFetchObject($qs) )
+		{
+			$rd 	= TRUE;  //---- ไว้ตรวจสอบ
+			if( $rs->status_up == 0 )
+			{
+				$qty = $rs->adjust_qty_add - $rs->adjust_qty_minus;
+				$type = $qty > 0 ? 'in' : 'out';
+				$reason = $qty > 0 ? 7 : 8 ;
+				$id_wh 	= get_warehouse_by_zone($rs->id_zone);
+				//--- 1. update stock
+				$ra = update_stock_zone($qty, $rs->id_zone, $rs->id_product_attribute);
+				
+				//--- 2. stock_movement
+				$rb = stock_movement($type, $reason, $rs->id_product_attribute, $id_wh, $qty, $adj->adjust_no, dbDate($adj->adjust_date, TRUE), $rs->id_zone);
+				
+				//--- 3. change status detail 
+				$rc = $adj->setDetailStatus($rs->id_adjust_detail, 1);
+				
+				//--- 4. change diff 
+				if( $rs->status_adjust != 0 )
+				{
+					$rd = $adj->setDiff($rs->status_adjust, 2) ? TRUE : FALSE;
+				}			
+				
+				if( $ra && $rb && $rc && $rd )
+				{
+					commitTransection();	
+				}
+				else
+				{
+					dbRollback();	
+					$err++;
+				}	
+			}
+		}	
+		endTransection();
+	}
+	
+	if( $err == 0 )
+	{ 
+		$adj->setStatus($id_adj, 1);
+	}
+	$sc = $err > 0 ? 'ปรับยอดไม่สำเร็จ '. $err.' รายการ' : 'success';
+	echo $sc;
+}
+
+//---------------- send detail table 
+if( isset( $_GET['getAdjustTable'] ) )
+{
+	$sc = 'fail';
+	$id_adj = $_GET['id_adjust'];
+	$qs = dbQuery("SELECT * FROM tbl_adjust_detail WHERE id_adjust = ".$id_adj);	
+	if( dbNumRows($qs) > 0 )
+	{
+		$no = 1;
+		$ds = array();
+		while( $rs = dbFetchObject($qs) )
+		{
+			$arr = array(
+						'no'			=> $no,
+						'id'				=> $rs->id_adjust_detail,
+						'barcode'	=> get_barcode($rs->id_product_attribute),
+						'product'		=> get_product_reference($rs->id_product_attribute),
+						'id_pa'		=> $rs->id_product_attribute,
+						'zone'			=> get_zone($rs->id_zone),
+						'id_zone'		=> $rs->id_zone,
+						'upQty'		=> $rs->adjust_qty_add,
+						'downQty'		=> $rs->adjust_qty_minus,
+						'edit'			=> $rs->status_up == 0 ? 1 : 0,
+						);
+			array_push($ds, $arr);
+			$no++;					
+		}
+		$sc = json_encode($ds);
+	}
+	else
+	{
+		$sc = 'nodata';
+	}
+	echo $sc;
+}
+
+
 if( isset( $_GET['addNewAdjust'] ) )
 {
 	$sc		= 'fail';
@@ -26,10 +123,35 @@ if( isset( $_GET['addNewAdjust'] ) )
 	echo $sc;
 }
 
+
+if( isset( $_GET['updateHeader'] ) )
+{
+	$sc = 'success';
+	$id_adj = $_POST['id_adjust'];
+	$adj = new adjust($id_adj);
+	$ds = array(
+						'adjust_reference'	=> $_POST['adjust_reference'],
+						'adjust_date'		=> dbDate($_POST['date'], TRUE),
+						'adjust_note'			=> $_POST['remark']
+					);
+	$rs = $adj->update($id_adj, $ds);				
+	if( $rs )
+	{
+		dbQuery("UPDATE tbl_stock_movement SET date_upd = '".dbDate($_POST['date'], TRUE)."' WHERE reference = '".$adj->adjust_no."'");
+	}
+	else
+	{
+		$sc = 'fail';
+	}
+	
+	echo $sc;
+}
+
+
 	//เพิ่มสินค้าที่จะปรับยอด
 if( isset( $_GET['insertDetail'] ) )
 {
-	require '../function/stock_helper.php';
+
 	$sc 					= 'success';
 	$id_adj				= $_POST['id_adjust'];
 	$id_pa				= $_POST['id_pa'];
@@ -39,14 +161,22 @@ if( isset( $_GET['insertDetail'] ) )
 	$stock				= stockInZone($id_pa, $id_zone);
 	$allowUnderZero	= allow_under_zero();
 	$adj					= new adjust();
-	$id_ad				= $adj->isExistsUnsaveDetail($id_adj, $id_pa, $id_zone); //--- if exists will be return id_adjust_detail if not return FALSE;
+	$id_ad				= $adj->isExistsDetail($id_adj, $id_pa, $id_zone); //--- if exists will be return id_adjust_detail if not return FALSE;
 	if( $id_ad !== FALSE )
 	{
 		$ds = $adj->getAdjustDetail($id_ad);
 		$incQty	= $ds === FALSE ? 0 + $increase : $ds['adjust_qty_add'] + $increase;
 		$decQty	= $ds === FALSE ? 0 + $decrease : $ds['adjust_qty_minus'] + $decrease;
 		$LastQty	= $incQty - $decQty;
-		if( ($stock + $LastQty) < 0 && ! $allowUnderZero)
+		if( $ds['status_up'] == 1 )
+		{
+			$sc = 'รายการซ้ำ ไม่อนุญาติให้ปรับยอดสินค้าซ้ำกันในโซนเดียวกันบนเอกสารเดียวกัน';
+		}
+		else if( ($ds['adjust_qty_add'] > 0 && $decrease > 0) OR ($ds['adjust_qty_minus'] > 0 && $increase > 0) )
+		{
+			$sc = 'ไม่สามารถลดยอดและเพิ่มยอดในรายการเดียวกันได้';
+		}
+		else if( ($stock + $LastQty) < 0 && ! $allowUnderZero)
 		{
 			$sc = 'ไม่อนุญาติให้สต็อกติดลบ จำนวนที่ปรับลงต้องไม่เกิน '.$stock;
 		}
@@ -63,8 +193,8 @@ if( isset( $_GET['insertDetail'] ) )
 			}
 		}			
 	}
-	else //---- unsave detail not exists insert new one
-	{
+	else //---- detail not exists insert new one
+	{	
 		$LastQty = $increase - $decrease;
 		if( ($stock + $LastQty) < 0 && ! $allowUnderZero)
 		{
@@ -94,6 +224,190 @@ if( isset( $_GET['insertDetail'] ) )
 }
 
 
+if( isset( $_GET['loadDiff'] ) )
+{
+	$id_adj 	= $_POST['id_adjust'];	
+	$diffs		= $_POST['diff'];
+	$adjust 	= new adjust($id_adj);
+	$err 		= 0;
+	startTransection();
+	foreach( $diffs as $id )
+	{
+		$ds = getDiffData($id);
+		if( $ds !== FALSE )
+		{
+			$arr = array(
+							'id_adjust'		=> $id_adj,
+							'id_product_attribute'	=> $ds['id_product_attribute'],
+							'id_zone'			=> $ds['id_zone'],
+							'adjust_qty_add'	=> $ds['qty_add'],
+							'adjust_qty_minus'	=> $ds['qty_minus'],
+							'date_up'		=> date("Y-m-d H:i:s"),
+							'status_adjust'	=> $ds['id_diff'],
+							'status_up'	=> 0
+						);	
+			$rs = $adjust->insertDetail($arr);
+			if( ! $rs )
+			{
+				 $err++; 
+			}
+			else
+			{
+				$adjust->setDiff($id, 1);	
+			}
+		}
+	}
+	if( $err == 0 )
+	{
+		commitTransection();
+	}
+	else
+	{
+		dbRollback();
+	}
+	endTransection();
+	$sc = $err > 0 ? 'ไม่สามารถนำเข้ายอดต่างบางรายการได้ กรุณาชลองใหม่อีกครั้ง' : 'success';
+	echo $sc;	
+}
+
+if( isset( $_GET['deleteDiff'] ) )
+{
+	$diffs = $_POST['diff'];
+	$err 	= 0;
+	$cp 	= 0;
+	foreach($diffs as $id)
+	{
+		$qs = dbQuery("DELETE FROM tbl_diff WHERE id_diff = ".$id);
+		if( ! $qs )
+		{
+			$err++;
+		}
+		else
+		{
+			$cp++;
+		}
+	}
+	$sc = $err > 0 ? 'ลบบางรายการไม่สำเร็จ' : 'success';
+	echo $sc;
+}
+
+
+if( isset( $_GET['updateDetail'] ) )
+{
+	
+	$sc = 'success';
+	$id_adjust_detail	= $_POST['id_adjust_detail'];
+	$id_zone 			= $_POST['id_zone'];
+	$id_pa				= $_POST['id_pa'];
+	$incQty				= $_POST['increase'];
+	$decQty				= $_POST['decrease'];
+	$LastQty				= $incQty - $decQty;
+	$stock				= stockInZone($id_pa, $id_zone);
+	$allowUnderZero	= allow_under_zero();
+	if( ($stock + $LastQty) < 0 && ! $allowUnderZero )
+	{
+		$sc = 'ไม่อนุญาติให้สต็อกติดลบ จำนวนที่ปรับลงต้องไม่เกิน '.$stock;	
+	}
+	else
+	{
+		$qs = dbQuery("UPDATE tbl_adjust_detail SET id_product_attribute = ".$id_pa.", id_zone = ".$id_zone.", adjust_qty_add = ".$incQty.", adjust_qty_minus = ".$decQty." WHERE id_adjust_detail = ".$id_adjust_detail);
+		if( $qs === FALSE )
+		{
+			$sc = 'fail';	
+		}
+	}
+	echo $sc;
+}
+
+
+	
+if( isset( $_POST['deleteDetail'] ) )
+{
+	$sc = 'success';
+	$id_ad	= $_POST['id_adjust_detail'];
+	$id_adj	= $_POST['id_adjust'];
+	$adj 		= new adjust($id_adj);
+	$ds 		= $adj->getAdjustDetail($id_ad);
+	$rs		= FALSE;
+	$rd 		= FALSE;
+	$rc		= FALSE;
+	
+	//----- ถ้ายังไม่บันทึก
+	if( $ds['status_up'] == 0  )
+	{
+		$rs = $adj->deleteDetail($id_ad);	//--- ลบรายการออกได้เลย
+		if( $rs )
+		{
+			//--- ถ้าโหลดยอดมา เปลี่ยนสถานะยอดต่างกลับเป็น 0
+			if( $ds['status_adjust'] != 0 )
+			{
+				$id_diff = $ds['status_adjust'];
+				$rd = $adj->setDiff($id_diff, 0); //--- 0 = ยังไม่โหลด 1 = โหลดเข้าปรับยอดแล้วแต่ยังไม่ได้ปรับ, 2 = ปรับยอดแล้ว
+				if( ! $rd )
+				{
+					$sc = 'ลบรายการเรียบร้อย แต่คืนยอดต่างไม่สำเร็จ';
+				}
+			}
+		}
+		else
+		{
+			$sc = 'ลบรายการไม่สำเร็จ';
+		}
+	}
+	//---- ถ้าบันทึกแล้ว 
+	//-------- ต้องตรวจสอบ ว่าหากมีการลดหรือเพิ่มยอดแล้วสต็อกติดลบหรือไม่
+	//----------- ถ้าตรวจสอบผ่านแล้ว  1. ลบรายการ(เปลี่ยนสถานะยอดต่างถ้ามี)   2. เพิ่ม/ลด ยอดสต็อกในโซน  3. ลบความเคลื่อนไหว
+	if( $ds['status_up'] == 1 )
+	{
+		$reference = $adj->adjust_no;
+		$incQty 	= $ds['adjust_qty_add'];
+		$decQty	= $ds['adjust_qty_minus'];
+		$id_pa	= $ds['id_product_attribute'];
+		$id_zone = $ds['id_zone'];
+		$qty 		= ($incQty - $decQty) * -1;  //--- กลับยอดเพิ่มเป็นลด ลดเป็นเพิ่ม
+		$stock 	= stockInZone($id_pa, $id_zone);
+		$allowUnderZero	= allow_under_zero();
+		//---- ตรวจสอบ 
+		if( ( $stock + $qty ) < 0 && ! $allowUnderZero )
+		{
+			$sc = 'ไม่สามารถลบได้เนื่องจากสต็อกจะติดลบ';
+		}
+		else
+		{
+			startTransection();
+			//---- 1. ลบรายการ
+			$rs = $adj->deleteDetail($id_ad);	
+			if( $rs )
+			{
+				//--- ถ้าโหลดยอดมา เปลี่ยนสถานะยอดต่างกลับเป็น 0
+				if( $ds['status_adjust'] != 0 )
+				{
+					$id_diff = $ds['status_adjust'];
+					$rd = $adj->setDiff($id_diff, 0); //--- 0 = ยังไม่โหลด 1 = โหลดเข้าปรับยอดแล้วแต่ยังไม่ได้ปรับ, 2 = ปรับยอดแล้ว
+					if( ! $rd )
+					{
+						$sc = 'ลบรายการเรียบร้อย แต่คืนยอดต่างไม่สำเร็จ';
+					}
+				}
+				//---- 2. เพิ่ม/ลด ยอดสต็อกในโซน
+				$ra = update_stock_zone($qty, $id_zone, $id_pa);
+				$rc = delete_movement($reference, $id_pa, $id_zone);
+			}
+			if( $rs && $ra && $rc )
+			{
+				commitTransection();
+			}
+			else
+			{
+				dbRollback();	
+			}
+			endTransection();
+		}
+	}
+	echo $sc;			
+}
+
+
 if( isset( $_GET['clearFilter'] ) )
 {
 	$cookie = array('adj_no', 'adj_ref', 'adj_rm', 'adj_vt', 'from', 'to');
@@ -104,186 +418,6 @@ if( isset( $_GET['clearFilter'] ) )
 	echo 'done';	
 }
 
-
 //------------------ END NEW CODE ---------------//
 
-
-///เพิ่มการปรับยอด///
-	if(isset($_GET['add'])){
-		$adjust_reference = $_POST['adjust_reference'];
-		$note = $_POST['note'];
-		$adjust_no = newAdjustNO();
-		$adjust_date = dbDate($_POST['adjust_date']);
-		dbQuery("INSERT INTO tbl_adjust(adjust_no,adjust_reference,adjust_date,adjust_note,id_employee) VALUES ('$adjust_no','$adjust_reference','$adjust_date','$note','$id_employee')");
-		list($id_adjust) = dbFetchArray(dbQuery("SELECT id_adjust from tbl_adjust where adjust_no = '$adjust_no'"));
-		header("location: ../index.php?content=ProductAdjust&add=y&id_adjust=$id_adjust");
-	}
-
-
-	//โหลดยอด diff
-	if(isset($_GET['loaddiff'])){
-		$id_adjust = $_POST['id_adjust'];
-		for($loop=1;$loop<=$_POST["hdnCount"];$loop++){
-			if(isset($_POST["chkDel$loop"])){
-			$id_diff = $_POST["chkDel$loop"];
-				if($id_diff != ""){
-					dbQuery("UPDATE tbl_diff SET status_diff = '1' where id_diff = '$id_diff'");
-					list($id_zone,$id_product_attribute,$qty_add,$qty_minus) = dbFetchArray(dbQuery("select id_zone,id_product_attribute,qty_add,qty_minus from tbl_diff where id_diff = '$id_diff'"));
-					dbQuery("INSERT INTO tbl_adjust_detail(id_adjust,id_product_attribute,id_zone,adjust_qty_add,adjust_qty_minus,status_adjust)VALUES('$id_adjust','$id_product_attribute','$id_zone','$qty_add','$qty_minus','$id_diff')");
-				}
-			}
-		}
-		dbQuery("UPDATE tbl_adjust SET adjust_status = '0'  WHERE id_adjust = '$id_adjust'");
-		header("location: ../index.php?content=ProductAdjust&add=y&id_adjust=$id_adjust");
-	}
-	
-	
-	//ลบรายการสินค้าที่ปรับยอด
-	if(isset($_GET['drop_adjust'])){
-		$id_adjust = $_GET['id_adjust'];
-		$id_adjust_detail = $_GET['id_adjust_detail'];
-		list($adjust_no) = dbFetchArray(dbQuery("SELECT adjust_no from tbl_adjust where id_adjust = '$id_adjust'"));
-		list($status_adjust,$status_up,$id_zone,$id_product_attribute,$adjust_qty_add,$adjust_qty_minus) = dbFetchArray(dbQuery("select status_adjust,status_up,id_zone,id_product_attribute,adjust_qty_add,adjust_qty_minus from tbl_adjust_detail where id_adjust_detail = '$id_adjust_detail'"));
-		list($id_warehouse) = dbFetchArray(dbQuery("select id_warehouse from tbl_zone where id_zone = '$id_zone'"));
-		list($adjust_date) = dbFetchArray(dbQuery("select adjust_date from tbl_adjust where id_adjust = '$id_adjust'"));
-		if($status_up == "0"){
-			dbQuery("DELETE FROM tbl_adjust_detail where id_adjust_detail = '$id_adjust_detail'");
-		}else{
-			$sum_qty_adjust = $adjust_qty_add + ($adjust_qty_minus *-1);
-			list($id_stock,$qty) = dbFetchArray(dbQuery("SELECT id_stock,qty FROM tbl_stock WHERE id_zone = '$id_zone' and id_product_attribute = '$id_product_attribute'"));
-			if($id_stock != "")
-			{
-				$sumqty = $qty + ($sum_qty_adjust * -1);
-				dbQuery("UPDATE tbl_stock SET qty = ".$sumqty." WHERE id_stock = ".$id_stock);
-			}
-			else
-			{
-				$sumqty = ($sum_qty_adjust * -1);
-				dbQuery("INSERT INTO tbl_stock (id_zone, id_product_attribute, qty) VALUES (".$id_zone.", ".$id_product_attribute.", ".$sumqty.")");	
-			}
-			dbQuery("DELETE FROM tbl_stock_movement WHERE reference = '".$adjust_no."' AND id_product_attribute = ".$id_product_attribute." AND id_zone = ".$id_zone);
-			dbQuery("DELETE FROM tbl_adjust_detail where id_adjust_detail = '$id_adjust_detail'");
-		}
-		if($status_adjust != 0)
-		{
-			dbQuery("UPDATE tbl_diff SET status_diff = '0' where id_diff = '$status_adjust'");
-		}
-		dropstockZero($id_product_attribute,$id_zone);
-		header("location: ../index.php?content=ProductAdjust&add=y&id_adjust=$id_adjust");
-	}
-	
-	
-	//แก้ไขรายการสินค้าที่ปรับยอด
-	if(isset($_GET['edit_detail'])){
-		$id_adjust = $_POST['id_adjust'];
-		$id_adjust_detail = $_POST['id_adjust_detail'];
-		$barcode = $_POST['barcode'];
-		$barcode_zone = $_POST['barcode_zone'];
-		$zone_name = $_POST['zone_name'];
-		$adjust_qty_add = $_POST['adjust_qty_add'];
-		$adjust_qty_minus = $_POST['adjust_qty_minus'];
-		$id_warehouse = $_POST['id_warehouse'];
-		list($id_product_attribute) = dbFetchArray(dbQuery("SELECT id_product_attribute FROM tbl_product_attribute where barcode = '$barcode'"));
-		list($id_zone) = dbFetchArray(dbQuery("SELECT id_zone FROM tbl_zone WHERE (barcode_zone = '$barcode_zone' or zone_name = '$zone_name') and id_warehouse = '$id_warehouse'"));
-		if($id_product_attribute == ""){
-			$message = "ไม่มีสินค้านี้กรุณาตรวจสอบบาร์โค้ดสินค้าใหม่";
-			header("location: ../index.php?content=ProductAdjust&add=y&id_adjust=$id_adjust&message=$message");
-		}else if($id_zone == ""){
-			$message = "ไม่มีโซนนี้กรุณาตรวจสอบ คลัง บาร์โค้ดหรือชื่อโซน";
-			header("location: ../index.php?content=ProductAdjust&add=y&id_adjust=$id_adjust&message=$message");
-		}else{
-			dbQuery("UPDATE tbl_adjust_detail SET id_product_attribute = '$id_product_attribute' , id_zone = '$id_zone' , adjust_qty_add = '$adjust_qty_add' , adjust_qty_minus = '$adjust_qty_minus' WHERE id_adjust_detail = '$id_adjust_detail'");
-		}
-		header("location: ../index.php?content=ProductAdjust&add=y&id_adjust=$id_adjust");
-	}
-	//ปรับยอด
-	if(isset($_GET['adjust'])){
-		$id_adjust = $_GET['id_adjust'];
-		list($adjust_date) = dbFetchArray(dbQuery("select adjust_date from tbl_adjust where id_adjust = '$id_adjust'"));
-		list($adjust_no) = dbFetchArray(dbQuery("SELECT adjust_no FROM tbl_adjust WHERE id_adjust = '$id_adjust'"));
-		$result = dbQuery("SELECT id_adjust_detail,id_product_attribute,barcode,reference,id_warehouse,warehouse_name,id_zone,barcode_zone,zone_name,adjust_qty_add,adjust_qty_minus,status_adjust FROM adjust_datail_table where id_adjust = '$id_adjust' and status_up = '0'");
-		$i=0;
-		$row = dbNumRows($result);
-		while($i<$row){
-		list($id_adjust_detail, $id_product_attribute, $barcode, $reference, $id_warehouse, $warehouse_name, $id_zone ,$barcode_zone ,$zone_name ,$adjust_qty_add ,$adjust_qty_minus ,$status_adjust) = dbFetchArray($result);	
-		$sum_qty_adjust = $adjust_qty_add + ($adjust_qty_minus * -1);
-		list($id_stock,$qty) = dbFetchArray(dbQuery("SELECT id_stock,qty FROM tbl_stock where id_zone = '$id_zone' and id_product_attribute = '$id_product_attribute'"));
-		if($id_stock != ""){
-		$sumqty = $qty + $sum_qty_adjust;
-		dbQuery("UPDATE tbl_stock SET qty = '$sumqty' where id_stock = '$id_stock'");
-		dbQuery("UPDATE tbl_diff SET status_diff = '2' where id_diff = '$status_adjust'");
-		if($sum_qty_adjust > "0" ){
-			stock_movement("in",7,$id_product_attribute,$id_warehouse,$sum_qty_adjust, $adjust_no,$adjust_date, $id_zone);
-		}else if($sum_qty_adjust < "0"){
-			$sum_qty_adjust1 = $sum_qty_adjust * (-1);
-			stock_movement("out",8,$id_product_attribute,$id_warehouse,$sum_qty_adjust1, $adjust_no,$adjust_date, $id_zone);
-		}
-		}else{
-			dbQuery("INSERT INTO tbl_stock (id_zone,id_product_attribute,qty) VALUES ('$id_zone','$id_product_attribute','$sum_qty_adjust')");
-			if($sum_qty_adjust > "0" ){
-				stock_movement("in",7,$id_product_attribute,$id_warehouse,$sum_qty_adjust, $adjust_no,$adjust_date,$id_zone);
-			}else if($sum_qty_adjust < "0"){
-				$sum_qty_adjust1 = $sum_qty_adjust * (-1);
-				stock_movement("out",8,$id_product_attribute,$id_warehouse,$sum_qty_adjust1, $adjust_no,$adjust_date, $id_zone);
-			}
-		}
-		dropstockZero($id_product_attribute,$id_zone);
-		$i++;
-		}
-		dbQuery("UPDATE tbl_adjust SET adjust_status = '1' where id_adjust = '$id_adjust'");
-		dbQuery("UPDATE tbl_adjust_detail SET status_up = '1' where id_adjust = '$id_adjust'");
-		header("location: ../index.php?content=ProductAdjust&view_detail=y&id_adjust=$id_adjust");
-	}
-	//ลบการปรับยอด
-	if(isset($_GET['drop'])){
-		$id_adjust = $_GET['id_adjust'];
-		list($adjust_date) = dbFetchArray(dbQuery("select adjust_date from tbl_adjust where id_adjust = '$id_adjust'"));
-		list($adjust_no) = dbFetchArray(dbQuery("SELECT adjust_no from tbl_adjust where id_adjust = '$id_adjust'"));
-		$result = dbQuery("SELECT id_adjust_detail,status_adjust,status_up,id_zone,id_product_attribute,adjust_qty_add,adjust_qty_minus FROM adjust_datail_table where id_adjust = '$id_adjust'");
-		$i=0;
-		$row = dbNumRows($result);
-		while($i<$row){
-		list($id_adjust_detail, $status_adjust,$status_up,$id_zone,$id_product_attribute,$adjust_qty_add,$adjust_qty_minus) = dbFetchArray($result);
-		list($id_warehouse) = dbFetchArray(dbQuery("select id_warehouse from tbl_zone where id_zone = '$id_zone'"));
-			if($status_adjust == "0"){
-			if($status_up == "0"){
-				dbQuery("DELETE FROM tbl_adjust_detail where id_adjust_detail = '$id_adjust_detail'");
-			}else{
-				$sum_qty_adjust = $adjust_qty_add - $adjust_qty_minus;
-				list($id_stock,$qty) = dbFetchArray(dbQuery("SELECT id_stock,qty FROM tbl_stock WHERE id_zone = '$id_zone' and id_product_attribute = '$id_product_attribute'"));
-				$sumqty = $qty - $sum_qty_adjust;
-				dbQuery("UPDATE tbl_stock SET qty = '$sumqty' WHERE id_stock = '$id_stock'");
-				if($sum_qty_adjust < "0" ){
-					$sum_qty_adjust1 = $sum_qty_adjust * (-1);
-					stock_movement("in",7,$id_product_attribute,$id_warehouse,$sum_qty_adjust1, $adjust_no,$adjust_date);
-				}else if($sum_qty_adjust > "0"){
-					stock_movement("out",8,$id_product_attribute,$id_warehouse,$sum_qty_adjust, $adjust_no,$adjust_date);
-				}
-				dbQuery("DELETE FROM tbl_adjust_detail where id_adjust_detail = '$id_adjust_detail'");
-			}
-		}else{
-			if($status_up == "0"){
-				dbQuery("DELETE FROM tbl_adjust_detail where id_adjust_detail = '$id_adjust_detail'");
-			}else{
-				$sum_qty_adjust = $adjust_qty_add - $adjust_qty_minus;
-				list($id_stock,$qty) = dbFetchArray(dbQuery("SELECT id_stock,qty FROM tbl_stock WHERE id_zone = '$id_zone' and id_product_attribute = '$id_product_attribute'"));
-				$sumqty = $qty - $sum_qty_adjust;
-				dbQuery("UPDATE tbl_stock SET qty = '$sumqty' WHERE id_stock = '$id_stock'");
-				if($sum_qty_adjust < "0" ){
-					$sum_qty_adjust1 = $sum_qty_adjust * (-1);
-					stock_movement("in",7,$id_product_attribute,$id_warehouse,$sum_qty_adjust1, $adjust_no,$adjust_date);
-				}else if($sum_qty_adjust > "0"){
-					stock_movement("out",8,$id_product_attribute,$id_warehouse,$sum_qty_adjust, $adjust_no,$adjust_date);
-				}
-				dbQuery("DELETE FROM tbl_adjust_detail where id_adjust_detail = '$id_adjust_detail'");
-			}
-			dbQuery("UPDATE tbl_diff SET status_diff = '0' where id_diff = '$status_adjust'");
-		}
-		dropstockZero($id_product_attribute,$id_zone);
-		$i++;
-		}
-		dbQuery("DELETE FROM tbl_adjust where id_adjust = '$id_adjust'");
-		
-		header("location: ../index.php?content=ProductAdjust");
-	}
 ?>

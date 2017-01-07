@@ -64,6 +64,12 @@ function startTransection()
 	return mysqli_autocommit($dbConn, FALSE);
 }
 
+function endTransection()
+{
+	global $dbConn;
+	return mysqli_autocommit($dbConn, TRUE);	
+}
+
 function commitTransection()
 {
 	global $dbConn;

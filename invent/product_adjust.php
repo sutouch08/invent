@@ -17,9 +17,14 @@
     	<p class="pull-right top-p">
         <?php if( isset( $_GET['add'] ) OR isset( $_GET['edit'] ) ) : ?>
         	<button type="button" class="btn btn-sm btn-warning" onClick="goBack()"><i class="fa fa-arrow-left"></i> กลับ</button>
+            <?php if( isset( $_GET['id_adjust'] ) ) : ?>
+            <button type="button" class="btn btn-sm btn-primary" onclick="getDiff()"><i class="fa fa-list"></i> ยอดต่าง</button>
+            <button type="button" class="btn btn-sm btn-success" onclick="save()"><i class="fa fa-save"></i> บันทึก</button>
+            <?php endif; ?>
         <?php endif; ?>
         
         <?php if( ! isset( $_GET['add'] ) && ! isset( $_GET['edit'] ) && $add) : ?>
+        	<button type="button" class="btn btn-sm btn-primary" onclick="viewDiff()"><i class="fa fa-list"></i> ยอดต่าง</button>
         	<button type="button" class="btn btn-sm btn-success" onClick="newAdjust()"><i class="fa fa-plus"></i> เพิ่มใหม่</button>
         <?php endif; ?>
         </p>
@@ -46,7 +51,7 @@
     </div>
     <div class="col-sm-2">
     	<label>วันที่</label>
-        <input type="text" class="form-control input-sm text-center" name="date" id="date" value="<?php echo $date; ?>" <?php echo $dis; ?> />
+        <input type="text" class="form-control input-sm text-center" name="date" id="date" value="<?php echo thaiDate($date); ?>" <?php echo $dis; ?> />
     </div>
     <div class="col-sm-5">
     	<label>หมายเหตุ</label>
@@ -80,7 +85,7 @@
         </div>
         <div class="col-sm-2">
         	<label>รหัสสินค้า</label>
-            <input type="text" class="form-control input-sm adj" name="paCode" id="paCode" placeholder="ระบุชื่อโซนที่ต้องการปรับปรุง" disabled />
+            <input type="text" class="form-control input-sm adj" name="paCode" id="paCode" placeholder="ระบุสินค้าที่ต้องการปรับปรุง" disabled />
         </div>
         <div class="col-sm-1">
         	<label>เพิ่ม</label>
@@ -93,8 +98,9 @@
         <div class="col-sm-1">
         	<label style="display:block; visibility:hidden;">btn</label>
         	<button type="button" class="btn btn-sm btn-default adj" id="btn-insert" onClick="insertDetail()" disabled>ตกลง</button>
+            <button type="button" class="btn btn-sm btn-warning hide" id="btn-update" onclick="updateDetail()" >ตกลง</button>
         </div>
-        <input type="hidden" name="id_wh" id="id_wh" value="" />
+        <input type="hidden" name="id_adjust_detail" id="id_adjust_detail" value="" />
         <input type="hidden" name="id_zone" id="id_zone" value="" />
         <input type="hidden" name="id_pa" id="id_pa" value="" />
         
@@ -105,9 +111,56 @@
         	<table class="table table-striped" style="border:solid 1px #CCC;">
             	<thead>
                 	<tr style="font-size:12px;">
-                    	
+                    	<th style="width:5%; text-align:center;">ลำดับ</th>
+                        <th style="width:15%; text-align:center;">บาร์โค้ด</th>
+                        <th style="width:25%;">สินค้า</th>
+                        <th style="width:25%; text-align:center;">โซน</th>
+                        <th style="width:10%; text-align:center;">เพิ่ม</th>
+                        <th style="width:10%; text-align:center;">ลด</th>
+                        <th style="text-align:center;">การกระทำ</th>
                     </tr>
                 </thead>
+                 <tbody id="result">
+	<?php $qs = dbQuery("SELECT * FROM tbl_adjust_detail WHERE id_adjust = ".$id); ?>           
+    <?php if( dbNumRows($qs) > 0 ) : ?>     
+    <?php	$n = 1 ?>
+    <?php 	while( $rs = dbFetchObject($qs) ) : ?>
+    <?php 		$id_pa = $rs->id_product_attribute; ?>
+    <?php		$item =  get_product_reference($id_pa); ?>
+    				<tr style="font-size:12px;" id="row_<?php echo $rs->id_adjust_detail; ?>">
+                    	<td align="center">
+							<?php echo $n; ?>
+                        </td>
+                        <td align="center" id="barcode_<?php echo $rs->id_adjust_detail; ?>">
+							<?php echo get_barcode($id_pa); ?>
+                        </td>
+                        <td id="product_<?php echo $rs->id_adjust_detail; ?>">
+							<?php echo $item; ?>
+                            <input type="hidden" id="id_pa_<?php echo $rs->id_adjust_detail; ?>" value="<?php echo $id_pa; ?>" />
+                        </td>
+                        <td align="center" id="zone_<?php echo $rs->id_adjust_detail; ?>">
+							<?php echo get_zone($rs->id_zone); ?>
+                            <input type="hidden" id="id_zone_<?php echo $rs->id_adjust_detail; ?>" value="<?php echo $rs->id_zone; ?>" />
+                        </td>
+                        <td align="center" id="add_<?php echo $rs->id_adjust_detail; ?>">
+							<?php echo $rs->adjust_qty_add; ?>
+                        </td>
+                        <td align="center" id="minus_<?php echo $rs->id_adjust_detail; ?>">
+							<?php echo $rs->adjust_qty_minus; ?>
+                        </td>
+                        <td align="right">
+                        <?php if( $rs->status_up == 0 ) : ?>
+                        	<button type="button" class="btn btn-xs btn-warning" onclick="editAdjustDetail(<?php echo $rs->id_adjust_detail; ?>)"><i class="fa fa-pencil"></i></button>
+                        <?php endif; ?>                        
+                        	<button type="button" class="btn btn-xs btn-danger" onClick="confirmDelete(<?php echo $rs->id_adjust_detail; ?>, '<?php echo $item; ?>')"><i class="fa fa-trash"></i></button>                
+                        </td>
+                    </tr>
+	<?php $n++; ?>                    
+    <?php	endwhile; ?>    
+    <?php endif; ?>
+               
+                
+                </tbody>
             </table>
         </div><!--/ col-sm-12 -->
     </div><!--/ row -->
@@ -224,7 +277,7 @@
                     <td><?php echo $rs['adjust_reference']; ?></td>
                     <td><?php echo employee_name($rs['id_employee']); ?></td>
                     <td><?php echo $rs['adjust_note']; ?></td>
-                    <td><?php echo $rs['adjust_status'] == 1 ? 'บันทึกแล้ว' : 'ยังไม่บันทึก'; ?></td>
+                    <td><?php echo $rs['adjust_status'] == 1 ? 'บันทึกแล้ว' : '<span style="color:red;">ยังไม่บันทึก</span>'; ?></td>
                     <td align="center"><?php echo thaiDate($rs['adjust_date']); ?></td>
                     <td align="right">
                    	<?php if( $edit ) : ?>
@@ -249,4 +302,94 @@
 
 
 </div><!--/ container -->
+<script id="adjTableTemplate" type="text/x-handlebars-template">
+{{#each this}}
+	<tr style="font-size:12px;" id="row_{{ id }}">
+		<td align="center">
+			{{ no }}
+		</td>
+		<td align="center" id="barcode_{{ id }}">
+			{{ barcode }}
+		</td>
+		<td id="product_{{ id }}">
+			{{ product }}
+			<input type="hidden" id="id_pa_{{ id }}" value="{{ id_pa }}" />
+		</td>
+		<td align="center" id="zone_{{ id }}">
+			{{ zone }}
+			<input type="hidden" id="id_zone_{{ id }}" value="{{ id_zone }}" />
+		</td>
+		<td align="center" id="add_{{ id }}">
+			{{ upQty }}
+		</td>
+		<td align="center" id="minus_{{ id }}">
+			{{ downQty }}
+		</td>
+		<td align="right">
+		{{#if edit}}
+		<button type="button" class="btn btn-xs btn-warning" onclick="editAdjustDetail({{ id }})"><i class="fa fa-pencil"></i></button>
+		{{/if}}
+		<button type="button" class="btn btn-xs btn-danger" onClick="confirmDelete({{ id }}, '{{ product }}')"><i class="fa fa-trash"></i></button>
+		</td>
+	</tr>
+{{/each}}	
+</script>
+
+<script>
+function editHeader()
+{
+	$("#adj_ref").removeAttr('disabled');
+	$("#date").removeAttr('disabled');
+	$("#remark").removeAttr('disabled');
+	$("#btn-edit-header").addClass('hide');
+	$("#btn-update-header").removeClass('hide');
+}
+
+function headerUpdated()
+{
+	$("#adj_ref").attr('disabled','disabled');
+	$("#date").attr('disabled','disabled');
+	$("#remark").attr('disabled','disabled');
+	$("#btn-update-header").addClass('hide');
+	$("#btn-edit-header").removeClass('hide');
+}
+
+function updateHeader()
+{
+	var id_adj = $("#id_adjust").val();
+	var ref = $("#adj_ref").val();
+	var date = $("#date").val();
+	var remark = $("#remark").val();
+	if( ! isDate(date) ){
+		swal("วันที่ไม่ถูกต้อง");
+		return false;
+	}
+	load_in();
+	$.ajax({
+		url:"controller/productAdjustController.php?updateHeader",
+		type:"POST", cache:"false", data:{ "id_adjust" : id_adj, "adjust_reference" : ref, "date" : date, "remark" : remark },
+		success: function(rs){
+			load_out();
+			var rs = $.trim(rs);
+			if( rs == 'success' ){
+				swal({ title: 'เรียบร้อย', type: 'success', timer: 1000 });
+				headerUpdated();	
+			}else{
+				swal("ข้อผิดพลาด", "ปรับปรุงข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง", "error");	
+			}
+		}
+	});
+}
+
+function getDiff()
+{
+	var id = $("#id_adjust").val();
+	window.location.href = "index.php?content=diff&id_adjust="+id;
+}
+
+function viewDiff()
+{
+	window.location.href = "index.php?content=diff";
+}
+</script>
 <script src="script/adjust.js"></script>

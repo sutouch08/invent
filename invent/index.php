@@ -59,6 +59,10 @@ switch($page){
 			$content = "product_adjust.php";
 			$pageTitle = "ปรับยอดสินค้า";
 			break;
+		case 'diff' :
+			$content = "diff.php";
+			$pageTitle = "โหลดยอดต่าง";
+			break;
 		case 'tranfer':
 			$content = 'tranfer.php';
 			$pageTitle = "โอนคลัง";

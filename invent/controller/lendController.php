@@ -228,19 +228,22 @@ if( isset( $_GET['add_to_order'] ) && isset( $_GET['id_order'] ) )
 	$sc 			= 0;
 	$fa			= 0;
 	$rc			= 0;
-	foreach($qtys as $id => $qty)
+	foreach($qtys as $color => $items)
 	{
-		if($qty != "")
+		foreach($items as $id => $qty)
 		{
-			$rc++;
-			$rs = $lend->add_to_order($id_order, $id, $qty);	
-			if($rs)
+			if($qty != "")
 			{
-				$sc++;
-			}
-			else
-			{
-				$fa++;
+				$rc++;
+				$rs = $lend->add_to_order($id_order, $id, $qty);	
+				if($rs)
+				{
+					$sc++;
+				}
+				else
+				{
+					$fa++;
+				}
 			}
 		}
 	}

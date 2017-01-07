@@ -78,7 +78,7 @@ if( isset( $_GET['importStockZone'] ) )
 				{
 					if( isExistsStockZone($idZone, $id_pa) )
 					{
-						$qs = dbQuery("UPDATE tbl_stock SET qty = ".$qty." WHERE id_zone = ".$idZone." AND id_product_attribute = ".$id_pa);
+						$qs = dbQuery("UPDATE tbl_stock SET qty = qty + ".$qty." WHERE id_zone = ".$idZone." AND id_product_attribute = ".$id_pa);
 					}
 					else
 					{

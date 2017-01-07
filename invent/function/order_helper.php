@@ -33,6 +33,30 @@ function categoryTabMenu($mode = 'order')
 		{
 			$sc .= '<li class=""><a href="#cat-'.$rs->id_category.'" role="tab" data-toggle="tab" onClick="'.$ajax.'('.$rs->id_category.')">'.$rs->category_name.'</a></li>';
 		}
+		$sc .= '<script>
+						function expandCategory(el)
+						{
+							var className = "open";
+							if (el.classList)
+							{
+								el.classList.add(className)
+							}else if (!hasClass(el, className)){
+								el.className += " " + className
+							}
+						}
+					
+						function collapseCategory(el)
+						{
+							var className = "open";
+							if (el.classList)
+							{
+								el.classList.remove(className)
+							}else if (hasClass(el, className)) {
+								var reg = new RegExp("(\\s|^)" + className + "(\\s|$)")
+								el.className=el.className.replace(reg, " ")
+							}
+						}
+					</script>';
 	}
 	return $sc;
 

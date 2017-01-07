@@ -54,7 +54,21 @@ class adjust
 		return $sc;
 	}
 	
-	function insertDetail( array $ds )
+	public function update($id, array $ds)
+	{
+		$set = '';
+		$n = count($ds);
+		$i = 1;
+		foreach( $ds as $key => $val )
+		{
+			$set .= $key." = '".$val."'";
+			if( $i < $n ){ $set .= ", "; }
+			$i++;	
+		}
+		return dbQuery("UPDATE tbl_adjust SET ".$set." WHERE id_adjust = ".$id);	
+	}
+	
+	public function insertDetail( array $ds )
 	{
 		$sc 		= FALSE;
 		$fields	= '';
@@ -81,10 +95,16 @@ class adjust
 		return $sc;
 	}
 	
-	function updateDetail($id, $increase, $decrease)
+	public function updateDetail($id, $increase, $decrease)
 	{
-		return dbQuery("UPDATE tbl_adjust_detail SET adjust_qty_up = adjust_qty_up + ".$increase.", adjust_qty_minus = adjust_qty_minus + ".$derecase." WHERE id_adjust_detail = ".$id);	
+		return dbQuery("UPDATE tbl_adjust_detail SET adjust_qty_add = adjust_qty_add + ".$increase.", adjust_qty_minus = adjust_qty_minus + ".$decrease." WHERE id_adjust_detail = ".$id);	
 	}
+	
+	public function deleteDetail($id)
+	{
+		return dbQuery("DELETE FROM tbl_adjust_detail WHERE id_adjust_detail = ".$id);	
+	}	
+	
 	
 	public function getNewReference($date = '')
 	{
@@ -108,10 +128,10 @@ class adjust
 		return $adjNo;
 	}
 	
-	public function isExistsUnSaveDetail($id, $id_pa, $id_zone)
+	public function isExistsDetail($id, $id_pa, $id_zone)
 	{
 		$sc = FALSE;
-		$qs = dbQuery("SELECT id_adjust_detail FROM tbl_adjust_detail WHERE id_adjust = ".$id." AND id_product_attribute = ".$id_pa." AND id_zone = ".$id_zone." AND status_up = 0");
+		$qs = dbQuery("SELECT id_adjust_detail FROM tbl_adjust_detail WHERE id_adjust = ".$id." AND id_product_attribute = ".$id_pa." AND id_zone = ".$id_zone);
 		if( dbNumRows($qs) > 0 )
 		{
 			list( $sc ) = dbFetchArray($qs);
@@ -130,9 +150,25 @@ class adjust
 		return $sc;
 	}
 	
+	//------ get all adjust_detail  row in id_adjust
+	public function getAllDetail($id)
+	{
+		return dbQuery("SELECT * FROM tbl_adjust_detail WHERE id_adjust = ".$id);
+	}
+	
 	public function setStatus($id_adj, $status)
 	{
 		return dbQuery("UPDATE tbl_adjust SET adjust_status = ".$status." WHERE id_adjust = ".$id_adj);	
+	}
+	
+	public function setDetailStatus($id, $status)
+	{
+		return dbQuery("UPDATE tbl_adjust_detail SET status_up = ".$status." WHERE id_adjust_detail = ".$id);	
+	}
+	
+	public function setDiff($id_diff, $status)
+	{
+		return dbQuery("UPDATE tbl_diff SET status_diff = ".$status." WHERE id_diff = ".$id_diff);	
 	}
 	
 }// end class

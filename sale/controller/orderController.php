@@ -389,16 +389,19 @@ if(isset($_GET['add_to_cart'])){
 	}else{
 		$id_cart = $rs['id_cart'];
 	}
-	foreach($order_qty as $id_product_attribute => $qty)
+	foreach($order_qty as $id_color => $items)
 	{
-		if($qty != "")
+		foreach($items as $id_product_attribute => $qty)
 		{
-			$is = isDuplicate($id_cart, $id_product_attribute);
-			if( $is != false )
+			if($qty != "")
 			{
-				dbQuery("UPDATE tbl_cart_product SET qty = qty+".$qty." WHERE id_cart_product = ".	$is);
-			}else{
-			dbQuery("INSERT INTO tbl_cart_product (id_cart, id_product_attribute, qty, date_add) VALUES (".$id_cart.", ".$id_product_attribute.", ".$qty.", NOW())");
+				$is = isDuplicate($id_cart, $id_product_attribute);
+				if( $is != false )
+				{
+					dbQuery("UPDATE tbl_cart_product SET qty = qty+".$qty." WHERE id_cart_product = ".	$is);
+				}else{
+				dbQuery("INSERT INTO tbl_cart_product (id_cart, id_product_attribute, qty, date_add) VALUES (".$id_cart.", ".$id_product_attribute.", ".$qty.", NOW())");
+				}
 			}
 		}
 	}

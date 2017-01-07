@@ -296,21 +296,32 @@ if(isset($_GET['add_to_order'])){
 	$i = 0;
 	$n = 0;
 	$missing = "";
-	foreach ($order_qty as $id=>$qty ){	
-		if($qty !=""){
-			$product = new product();
-			$customer = new customer($id_customer);
-			$id_product = $product->getProductId($id);
-			$product->product_detail($id_product, $order->id_customer);
-			$product->product_attribute_detail($id);
-			$total_amount = $qty*$product->product_sell;		
-			if(!ALLOW_UNDER_ZERO){
-				list($qty_moveing) = dbFetchArray(dbQuery("SELECT qty_move FROM tbl_move WHERE id_product_attribute = '$id' AND id_warehouse = 1"));
-				$instock = $product->available_order_qty($id); 
-				if($qty>$instock){
-					$missing .= $product->reference." มียอดคงเหลือไม่เพียงพอ &nbsp;<br/>";
-				}else{
-					if($order->insertDetail($id, $qty)){
+	foreach ($order_qty as $id_color => $items ){	
+		foreach($items as $id => $qty )
+		{
+			if($qty !=""){
+				$product = new product();
+				$customer = new customer($id_customer);
+				$id_product = $product->getProductId($id);
+				$product->product_detail($id_product, $order->id_customer);
+				$product->product_attribute_detail($id);
+				$total_amount = $qty*$product->product_sell;		
+				if(!ALLOW_UNDER_ZERO){
+					list($qty_moveing) = dbFetchArray(dbQuery("SELECT qty_move FROM tbl_move WHERE id_product_attribute = '$id' AND id_warehouse = 1"));
+					$instock = $product->available_order_qty($id); 
+					if($qty>$instock){
+						$missing .= $product->reference." มียอดคงเหลือไม่เพียงพอ &nbsp;<br/>";
+					}else{
+						if($order->insertDetail($id, $qty)){
+							$n++;
+								}else{
+							$message = $order->error_message;
+							header("location: ../index.php?content=order&add=y&id_order=$id_order&id_customer=$id_customer&error=$message");
+							exit;
+								}
+						}
+					}else{
+						if($order->insertDetail($id, $qty)){
 						$n++;
 							}else{
 						$message = $order->error_message;
@@ -318,15 +329,7 @@ if(isset($_GET['add_to_order'])){
 						exit;
 							}
 					}
-				}else{
-					if($order->insertDetail($id, $qty)){
-					$n++;
-						}else{
-					$message = $order->error_message;
-					header("location: ../index.php?content=order&add=y&id_order=$id_order&id_customer=$id_customer&error=$message");
-					exit;
-						}
-				}
+			}
 		}
 	}
 	if($missing ==""){

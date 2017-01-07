@@ -84,12 +84,13 @@
     <?php 	while($rs = dbFetchArray($qs) ) : ?>
     <?php 		$diff = get_diff($rs['id_product_attribute'], $_GET['id_zone']); ?>
     <?php 		$id = $rs['id_product_attribute']; ?>
+    <?php		$count = $rs['qty'] + $diff; ?>
     	<tr>
         	<td><?php echo get_product_reference($rs['id_product_attribute']); ?></td>
             <td align="center"><?php echo number_format($rs['qty']); ?><input type="hidden" id="qty_<?php echo $id; ?>" name="qty[<?php echo $id; ?>]" value="<?php echo $rs['qty']; ?>" /></td>
             <td align="center">
 				<?php if($edit) : ?>
-            	<input type="text" class="form-control input-sm" style="text-align:center;" id="qty_check_<?php echo $id; ?>" name="qty_check[<?php echo $id; ?>]" onkeyup="check_number($(this))" value="<?php echo ($diff*-1) + $rs['qty']; ?>" />
+            	<input type="text" class="form-control input-sm" style="text-align:center;" id="qty_check_<?php echo $id; ?>" name="qty_check[<?php echo $id; ?>]" onkeyup="check_number($(this))" value="<?php echo $count; ?>" />
                 <?php endif; ?>
            </td>
            <td align="center">

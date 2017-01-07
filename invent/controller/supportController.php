@@ -300,54 +300,57 @@ if(isset($_GET['add_to_order'])){
 	$order_qty = $_POST['qty'];
 	$n = 0;
 	$missing = "";
-	foreach ($order_qty as $id=>$qty ){	
-		if($qty !=""){
-			$product = new product();
-			$id_product = $product->getProductId($id);
-			$product->product_attribute_detail($id);
-			$total_amount = $qty*$product->product_sell;		
-			$balance = get_support_balance($id_budget);	
-			if($total_amount <= $balance){
-				if(!ALLOW_UNDER_ZERO)
-				{
-							$instock = $product->available_order_qty($id); 
-							if($qty>$instock)
-							{
-								$missing .= $product->reference." : มียอดคงเหลือไม่เพียงพอ &nbsp;<br/>";
-							}
-							else
-							{
-										if($order->insert_support_detail($id, $qty))
-										{
-											$amount = $balance - $total_amount;
-											update_support_balance($id_budget, $amount);
-											$n++;
-										}
-										else
-										{
-											$missing .= $product->reference. " : ".$order->error_message. "<br/>";
-										}
-								}
-					}
-					else
+	foreach ($order_qty as $id_color => $items ){	
+		foreach($items as $id => $qty)
+		{
+			if($qty !=""){
+				$product = new product();
+				$id_product = $product->getProductId($id);
+				$product->product_attribute_detail($id);
+				$total_amount = $qty*$product->product_sell;		
+				$balance = get_support_balance($id_budget);	
+				if($total_amount <= $balance){
+					if(!ALLOW_UNDER_ZERO)
 					{
-							if($order->insert_support_detail($id, $qty))
-							{
-								$amount = $balance - $total_amount;
-								update_support_balance($id_budget, $amount);
-								$n++;
-							}
-							else
-							{
-								$missing .= $product->reference. " : ".$order->error_message. "<br/>";
-							}
-					}
-			}
-			else
-			{
-				$missing .= 	$product->reference." : งบประมาณคงเหลือไม่เพียงพอ";
-			}//if($order_amount <= $balance)
-		}// if qty !=0
+								$instock = $product->available_order_qty($id); 
+								if($qty>$instock)
+								{
+									$missing .= $product->reference." : มียอดคงเหลือไม่เพียงพอ &nbsp;<br/>";
+								}
+								else
+								{
+											if($order->insert_support_detail($id, $qty))
+											{
+												$amount = $balance - $total_amount;
+												update_support_balance($id_budget, $amount);
+												$n++;
+											}
+											else
+											{
+												$missing .= $product->reference. " : ".$order->error_message. "<br/>";
+											}
+									}
+						}
+						else
+						{
+								if($order->insert_support_detail($id, $qty))
+								{
+									$amount = $balance - $total_amount;
+									update_support_balance($id_budget, $amount);
+									$n++;
+								}
+								else
+								{
+									$missing .= $product->reference. " : ".$order->error_message. "<br/>";
+								}
+						}
+				}
+				else
+				{
+					$missing .= 	$product->reference." : งบประมาณคงเหลือไม่เพียงพอ";
+				}//if($order_amount <= $balance)
+			}// if qty !=0
+		}//foreach
 	}// foreach
 	if($missing ==""){
 		$message = "เพิ่ม $n รายการเรียบร้อย";

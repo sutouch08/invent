@@ -323,54 +323,57 @@ if(isset($_GET['add_to_order'])){
 	$order_qty = $_POST['qty'];
 	$n = 0;
 	$missing = "";
-	foreach ($order_qty as $id=>$qty ){	
-		if($qty !=""){
-			$product = new product();
-			$id_product = $product->getProductId($id);
-			$product->product_attribute_detail($id);
-			$total_amount = $qty * $product->product_sell;
-			$balance = get_sponsor_balance($id_budget);
-			if($total_amount <= $balance){  /// ถ้ายอดสั่งน้อยกว่าหรือเท่ากับ งบคงเหลือ อนุญาติให้สั่งได้
-				if(!ALLOW_UNDER_ZERO)  //// ถ้าไม่อนุญาติให้สต็อกติดลบได้
-				{
-							$instock = $product->available_order_qty($id); /// ตรวจสอบยอดคงเหลือในสต็อก (คำนวนแล้ว)
-							if($qty > $instock)   									/// ถ้ายอดสั่งมากกว่ายอดคงเหลือในสต็อก
-							{
-								$missing .= $product->reference." : มียอดคงเหลือไม่เพียงพอ &nbsp;<br/>";   //// บันทึกข้อผิดพลาด แล้วไม่ต้องทำอะไร
-							}
-							else 												/// ถ้ายอดสั่งน้อยกว่ายอดคงเหลือในสต็อก
-							{
-										if($order->insert_support_detail($id, $qty))		/// ใช้ฟังชันก์เดียวกับ เบิกอภินันท์ เพราะใช้ร่วมกันได้
-										{
-											$amount = $balance - $total_amount;
-											update_sponsor_balance($id_budget, $amount);
-											$n++;
-										}
-										else
-										{
-											$missing .= $product->reference. " : ".$order->error_message. "<br/>";
-										}
-								}
-					}
-					else
+	foreach ($order_qty as $id_color => $items ){	
+		foreach($items as $id => $qty)
+		{
+			if($qty !=""){
+				$product = new product();
+				$id_product = $product->getProductId($id);
+				$product->product_attribute_detail($id);
+				$total_amount = $qty*$product->product_sell;
+				$balance = get_sponsor_balance($id_budget);
+				if($total_amount <= $balance){  /// ถ้ายอดสั่งน้อยกว่าหรือเท่ากับ งบคงเหลือ อนุญาติให้สั่งได้
+					if(!ALLOW_UNDER_ZERO)  //// ถ้าไม่อนุญาติให้สต็อกติดลบได้
 					{
-							if($order->insert_support_detail($id, $qty))			/// ใช้ฟังชันก์เดียวกับ เบิกอภินันท์ เพราะใช้ร่วมกันได้
-							{
-								$amount = $balance - $total_amount;
-								update_sponsor_balance($id_budget, $amount);
-								$n++;
-							}
-							else
-							{
-								$missing .= $product->reference. " : ".$order->error_message. "<br/>";
-							}
-					}
-			}
-			else
-			{
-				$missing .= 	$product->reference." : งบประมาณคงเหลือไม่เพียงพอ";
-			}//if($order_amount <= $balance)
-		}// if qty !=0
+								$instock = $product->available_order_qty($id); /// ตรวจสอบยอดคงเหลือในสต็อก (คำนวนแล้ว)
+								if($qty > $instock)   									/// ถ้ายอดสั่งมากกว่ายอดคงเหลือในสต็อก
+								{
+									$missing .= $product->reference." : มียอดคงเหลือไม่เพียงพอ &nbsp;<br/>";   //// บันทึกข้อผิดพลาด แล้วไม่ต้องทำอะไร
+								}
+								else 												/// ถ้ายอดสั่งน้อยกว่ายอดคงเหลือในสต็อก
+								{
+											if($order->insert_support_detail($id, $qty))		/// ใช้ฟังชันก์เดียวกับ เบิกอภินันท์ เพราะใช้ร่วมกันได้
+											{
+												$amount = $balance - $total_amount;
+												update_sponsor_balance($id_budget, $amount);
+												$n++;
+											}
+											else
+											{
+												$missing .= $product->reference. " : ".$order->error_message. "<br/>";
+											}
+									}
+						}
+						else
+						{
+								if($order->insert_support_detail($id, $qty))			/// ใช้ฟังชันก์เดียวกับ เบิกอภินันท์ เพราะใช้ร่วมกันได้
+								{
+									$amount = $balance - $total_amount;
+									update_sponsor_balance($id_budget, $amount);
+									$n++;
+								}
+								else
+								{
+									$missing .= $product->reference. " : ".$order->error_message. "<br/>";
+								}
+						}
+				}
+				else
+				{
+					$missing .= 	$product->reference." : งบประมาณคงเหลือไม่เพียงพอ";
+				}//if($order_amount <= $balance)
+			}// if qty !=0
+		}// foreach items
 	}// foreach
 	if($missing ==""){
 		$message = "เพิ่ม $n รายการเรียบร้อย";

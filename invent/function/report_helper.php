@@ -319,6 +319,17 @@ function getProductCost($id_pa)
 	return $sc;
 }
 
+function getProductGroupName($id_pd)
+{
+	$sc = '';
+	$qs = dbQuery("SELECT name FROM tbl_product_group JOIN tbl_product ON tbl_product_group.id = tbl_product.id_product_group WHERE id_product = ".$id_pd);
+	if( dbNumRows($qs) == 1 )
+	{
+		list( $sc ) = dbFetchArray($qs);
+	}
+	return $sc;
+}
+
 function setToken($token)
 {
 	setcookie("file_download_token", $token, time() +3600,"/");	
