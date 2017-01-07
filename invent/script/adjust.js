@@ -1,4 +1,58 @@
+function editHeader()
+{
+	$("#adj_ref").removeAttr('disabled');
+	$("#date").removeAttr('disabled');
+	$("#remark").removeAttr('disabled');
+	$("#btn-edit-header").addClass('hide');
+	$("#btn-update-header").removeClass('hide');
+}
 
+function headerUpdated()
+{
+	$("#adj_ref").attr('disabled','disabled');
+	$("#date").attr('disabled','disabled');
+	$("#remark").attr('disabled','disabled');
+	$("#btn-update-header").addClass('hide');
+	$("#btn-edit-header").removeClass('hide');
+}
+
+function updateHeader()
+{
+	var id_adj = $("#id_adjust").val();
+	var ref = $("#adj_ref").val();
+	var date = $("#date").val();
+	var remark = $("#remark").val();
+	if( ! isDate(date) ){
+		swal("วันที่ไม่ถูกต้อง");
+		return false;
+	}
+	load_in();
+	$.ajax({
+		url:"controller/productAdjustController.php?updateHeader",
+		type:"POST", cache:"false", data:{ "id_adjust" : id_adj, "adjust_reference" : ref, "date" : date, "remark" : remark },
+		success: function(rs){
+			load_out();
+			var rs = $.trim(rs);
+			if( rs == 'success' ){
+				swal({ title: 'เรียบร้อย', type: 'success', timer: 1000 });
+				headerUpdated();	
+			}else{
+				swal("ข้อผิดพลาด", "ปรับปรุงข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง", "error");	
+			}
+		}
+	});
+}
+
+function getDiff()
+{
+	var id = $("#id_adjust").val();
+	window.location.href = "index.php?content=diff&id_adjust="+id;
+}
+
+function viewDiff()
+{
+	window.location.href = "index.php?content=diff";
+}
 
 $(document).ready(function(e) {
     $("#increase").numberOnly();
