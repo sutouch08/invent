@@ -340,13 +340,14 @@ if( isset( $_GET['get_po_detail'] ) && isset( $_GET['id_po'] ) )
 		$total_qty = 0; $total_received = 0;
 		while($rs = dbFetchArray($qs) ) :
 			$dis    = $po->getDiscount($rs['discount_percent'], $rs['discount_amount']);
+			$backlog = $rs['received'] >= $rs['qty'] ? 0 : $rs['qty'] - $rs['received'];
 			$data .= "<tr style='font-size=12px'>";
 			$data .= "<td align='center'>".$n."</td>";
 			$data .= "<td>".get_product_reference($rs['id_product_attribute'])."</td>";
 			$data .= "<td>".get_product_name($rs['id_product'])."</td>";
 			$data .= "<td align='right'>".ac_format($rs['qty'])."</td>";
 			$data .= "<td align='center'>".ac_format($rs['received'])."</td>";
-			$data .= "<td align='center'>".ac_format($rs['qty'] - $rs['received'])."</td>";		
+			$data .= "<td align='center'>". ac_format($backlog)."</td>";		
 			$data .= "</tr>";	
 			$n++; $total_qty += $rs['qty']; $total_received += $rs['received'];
 		endwhile;
@@ -387,9 +388,10 @@ if( isset( $_GET['export_po_detail'] ) && isset( $_GET['id_po'] ) )
 		$n 		= 1;
 		$total_qty = 0; $total_received = 0;
 		while($rs = dbFetchArray($qs) ) :
-			$arr = array($n, get_product_reference($rs['id_product_attribute']), get_product_name($rs['id_product']), $rs['qty'], $rs['received'], $rs['qty'] - $rs['received']);
+			$backlog = $rs['received'] >= $rs['qty'] ? 0 : $rs['qty'] - $rs['received'];
+			$arr = array($n, get_product_reference($rs['id_product_attribute']), get_product_name($rs['id_product']), $rs['qty'], $rs['received'], $backlog);
 			array_push($data, $arr);	
-			$n++; $total_qty += $rs['qty']; $total_received += $rs['received'];
+			$n++; $total_qty += $rs['qty']; $total_received += $backlog;
 		endwhile;
 		$arr 	= array("", "", "รวมทั้งหมด", $total_qty, $total_received, $total_qty - $total_received);
 		array_push($data, $arr);

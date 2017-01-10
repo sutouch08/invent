@@ -1,5 +1,99 @@
 <?php
 
+function getOrderStateInTime($state, $from, $to) //--- กรองวันที่และเวลา ตามสถานะ
+{
+	$sc = FALSE;
+	$qr = "SELECT distinct tbl_order.id_order FROM tbl_order JOIN tbl_order_state_change ON tbl_order.id_order = tbl_order_state_change.id_order ";
+	$qr .= "WHERE id_order_state = $state AND tbl_order_state_change.date_add >= '".$from."' AND tbl_order_state_change.date_add <= '".$to."' ORDER BY tbl_order_state_change.date_add DESC";
+	$qs = dbQuery($qr);
+	if( dbNumRows($qs) > 0 )
+	{
+		while( $rs = dbFetchObject($qs) )
+		{
+			$sc .= $rs->id_order.', ';	
+		}
+		$sc = trim($sc, ', ');
+	}	
+	return $sc;
+}
+
+
+function selectStateTime($state)
+{
+	$states = array(
+					'1'	=> 'รอชำระเงิน', //-- รอชำระเงิน
+					'3'	=> 'รอจัดสินค้า', //-- รอจัดสินค้า
+					'4'	=> 'กำลังจัดสินค้า', //-- กำลังจัดสินค้า
+					'5'	=> 'รอตรวจสินค้า', //-- รอตรวจสินค้า
+					'11'	=> 'กำลังตรวจสินค้า', //-- กำลังตรวจสินค้า
+					'10'	=> 'รอเปิดบิล' //-- รอเปิดบิล
+					);
+	$sc = '<option value="">เลือกสถานะ</option>';
+	foreach( $states as $id => $name)
+	{
+		$sc .= '<option value="'.$id.'" '.isSelected($state, $id).'>'.$name.'</option>';
+	}
+	return $sc;
+}
+
+function selectTime($time)
+{
+	$sc = '';
+	$times = array('00:00','00:30','01:00','01:30','02:00','02:30','03:00','03:30','04:00','04:30','05:00','05:30','06:00','06:30','07:00','07:30','08:00','08:30','09:00',
+						'09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30',
+						'20:00','20:30','21:00','21:30','22:00','22:30','23:00','23:30');
+	foreach($times as $hrs)
+	{
+		$sc .= '<option value="'.$hrs.'" '.isSelected($time, $hrs).'>'.$hrs.'</option>';
+	}
+	return $sc;		
+}
+
+
+function selectHour($hour)
+{
+	$sc = '';
+	$time = array('00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23');
+	foreach( $time as $hrs )
+	{
+		$sc .= '<option value="'.$hrs.'" '.isSelected($hour, $hrs).'>'.$hrs.'</option>';
+	}
+	return $sc;
+}
+
+function selectMin($min)
+{
+	$sc = '';
+	$time = array('00', '15', '30', '45');
+	foreach( $time as $mins )
+	{
+		$sc .= '<option value="'.$mins.'" '.isSelected($min, $mins).'>'.$mins.'</option>';
+	}
+	return $sc;
+}
+
+
+function getStateIn($state)
+{
+	$sc = '';
+	$id = array(
+							'state_1'	=> 1, //-- รอชำระเงิน
+							'state_3'	=> 3, //-- รอจัดสินค้า
+							'state_4'	=> 4, //-- กำลังจัดสินค้า
+							'state_5'	=> 5, //-- รอตรวจสินค้า
+							'state_11'	=> 11, //-- กำลังตรวจสินค้า
+							'state_10'	=> 10 //-- รอเปิดบิล
+							);
+	foreach( $state as $key => $val )
+	{
+		if( $val == 1 )
+		{
+			$sc .= $id[$key].',';	
+		}
+	}
+	return trim($sc, ',');
+}
+
 function haveSubCategory($id_category)
 {
 	$sc = FALSE;
@@ -400,6 +494,7 @@ function removeServiceFee($id_order)
 }
 
 //--------------------------------------------------------
+/*
 function selectHour($se = '')
 {
 	$sc	= '';
@@ -410,7 +505,9 @@ function selectHour($se = '')
 	}
 	return $sc;
 }
+*/
 
+/*
 function selectMin($se = '' )
 {
 	$sc = '<option value="00">00</option>';
@@ -424,6 +521,7 @@ function selectMin($se = '' )
 	}
 	return $sc;
 }
+*/
 
 function isPaymentExists($id_order)
 {

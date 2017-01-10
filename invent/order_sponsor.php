@@ -891,4 +891,27 @@ function getCategory(id) {
         });
     }
 }
+
+	function expandCategory(el)
+	{
+		var className = 'open';
+		if (el.classList)
+		{
+    		el.classList.add(className)
+		}else if (!hasClass(el, className)){
+			el.className += " " + className
+		}
+	}
+
+	function collapseCategory(el)
+	{
+		var className = 'open';
+		if (el.classList)
+		{
+			el.classList.remove(className)
+		}else if (hasClass(el, className)) {
+			var reg = new RegExp('(\\s|^)' + className + '(\\s|$)')
+			el.className=el.className.replace(reg, ' ')
+  		}
+	}
 </script>

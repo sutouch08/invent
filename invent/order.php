@@ -639,9 +639,38 @@ $('#modal_approve_edit').on('shown.bs.modal', function () {  $('#edit_bill_passw
 	$from		= isset( $_POST['from_date'] ) ? $_POST['from_date'] : ( getCookie('orderFrom') ? getCookie('orderFrom') : '');
 	$to		= isset( $_POST['to_date'] ) ? $_POST['to_date'] : ( getCookie('orderTo') ? getCookie('orderTo') : '');
 	$vt			= isset( $_POST['viewType'] ) ? $_POST['viewType'] : (getCookie('viewType') ? getCookie('viewType') : 1 );
+	$selectState = isset( $_POST['selectState'] ) ? $_POST['selectState'] : ( getCookie('selectState') ? getCookie('selectState') : '');
+	$fhour 	= isset( $_POST['fhour'] ) ? $_POST['fhour'] : ( getCookie('fhour') ? getCookie('fhour') : '');
+	$thour 	= isset( $_POST['thour'] ) ? $_POST['thour'] : ( getCookie('thour') ? getCookie('thour') : '');
+	$state 	= array(
+							'state_1'	=> isset( $_POST['state_1'] ) ? $_POST['state_1'] : (getCookie('state_1') ? getCookie('state_1') : 0), //-- รอชำระเงิน
+							'state_3'	=> isset( $_POST['state_3'] ) ? $_POST['state_3'] : (getCookie('state_3') ? getCookie('state_3') : 0), //-- รอจัดสินค้า
+							'state_4'	=> isset( $_POST['state_4'] ) ? $_POST['state_4'] : (getCookie('state_4') ? getCookie('state_4') : 0), //-- กำลังจัดสินค้า
+							'state_5'	=> isset( $_POST['state_5'] ) ? $_POST['state_5'] : (getCookie('state_5') ? getCookie('state_5') : 0), //-- รอตรวจสินค้า
+							'state_11'	=> isset( $_POST['state_11'] ) ? $_POST['state_11'] : (getCookie('state_11') ? getCookie('state_11') : 0), //-- กำลังตรวจสินค้า
+							'state_10'	=> isset( $_POST['state_10'] ) ? $_POST['state_10'] : (getCookie('state_10') ? getCookie('state_10') : 0) //-- รอเปิดบิล
+							);
+	$stateName = array(
+							'state_1'	=> 'รอชำระเงิน', //-- รอชำระเงิน
+							'state_3'	=> 'รอจัดสินค้า', //-- รอจัดสินค้า
+							'state_4'	=> 'กำลังจัดสินค้า', //-- กำลังจัดสินค้า
+							'state_5'	=> 'รอ QC', //-- รอตรวจสินค้า
+							'state_11'	=> 'กำลัง QC', //-- กำลังตรวจสินค้า
+							'state_10'	=> 'รอเปิดบิล' //-- รอเปิดบิล
+							);
+								
 	$all		= $vt == 1 ? 'btn-info' : '';
 	$online	= $vt == 2 ? 'btn-info' : '';
+	$normal 	= $vt == 3 ? 'btn-info' : '';
+	
+	
+	if( isset( $_POST['from_date'] ) ){ createCookie('orderFrom', $from); }
+	if( isset( $_POST['to_date'] ) ){ createCookie('orderTo', $to); }
 	if( isset( $_POST['viewType'] ) ){ createCookie('viewType', $vt, 3600*24*60); }
+	if( isset( $_POST['selectState'] ) ){ createCookie('selectState', $selectState, 3600*24*60); }
+	if( isset( $_POST['fhour'] ) ){ createCookie('fhour', $fhour, 3600*24*60); }
+	if( isset( $_POST['thour'] ) ){ createCookie('thour', $thour, 3600*24*60); }
+	foreach($state as $key => $val){  if( isset( $_POST[$key] ) ){ createCookie($key, $val, 3600*24*60); } }
 	$paginator = new paginator();
 	$get_rows = isset( $_POST['get_rows'] ) ? $_POST['get_rows'] : ( getCookie('get_rows') ? getCookie('get_rows') : 50);	
 ?>
@@ -664,28 +693,66 @@ $('#modal_approve_edit').on('shown.bs.modal', function () {  $('#edit_bill_passw
         <input type="text" class="form-control input-sm input-discount text-center" id="from_date" name="from_date" value="<?php echo $from; ?>" placeholder="เริ่มต้น" />
         <input type="text" class="form-control input-sm input-unit text-center" id="to_date" name="to_date" value="<?php echo $to; ?>" placeholder="สิ้นสุด" />
     </div>
-    <div class="col-sm-1 padding-5">
- 		<label style="display:block; visibility:hidden;">&nbsp;</label>
-        <button type="button" class="btn btn-primary btn-sm btn-block" onClick="getSearch()">ใช้ตัวกรอง</button>
-    </div>
-     <div class="col-sm-2 padding-5">
+    <div class="col-sm-2 padding-5">
  		<label style="display:block; visibility:hidden;">&nbsp;</label>
         <div class="btn-group" style="width:100%;">
-        	<button type="button" id="btn-show-all" class="btn btn-sm <?php echo $all; ?>" style="width:50%;" onClick="showAll()" >แสดงทั้งหมด</button>
-            <button type="button" id="btn-show-online" class="btn btn-sm <?php echo $online; ?>" style="width:50%;" onClick="showOnline()" >เฉพาะออนไลน์</button>
+        	<button type="button" id="btn-show-all" class="btn btn-sm width-33 <?php echo $all; ?>" onClick="showAll()" >ทั้งหมด</button>
+            <button type="button" id="btn-show-online" class="btn btn-sm width-33 <?php echo $online; ?>"  onClick="showOnline()" >ออนไลน์</button>
+            <button type="button" id="btn-show-normal" class="btn btn-sm width-33 <?php echo $normal; ?>" onClick="showNormal()">เครดิต</button>
         </div>        
     </div>
-    <div class="col-sm-1 padding-5" style="padding-right:15px;">
+    <div class="col-sm-1 col-sm-offset-1 padding-5 last">
  		<label style="display:block; visibility:hidden;">&nbsp;</label>
         <button type="button" class="btn btn-warning btn-sm btn-block" onClick="clearFilter()">Reset</button>
     </div>
+    <div style="width:100%; float:left; height:1px; margin-top:5px; margin-bottom:5px;"></div>
+    
+ 
+    <?php $first = 1; ?>
+    <?php foreach($state as $key => $val ) : ?>
+    <?php	$st = $val == 1 ? 'btn-info' : ''; ?>
+    <div class="col-sm-1 padding-5 <?php echo ($first == 1 ? 'first' : ''); ?>">
+    	<label style="display:block; visibility:hidden;">&nbsp;</label>
+		<button type="button" id="btn-<?php echo $key; ?>" class="btn btn-sm btn-block <?php echo $st; ?>" onclick="toggleState('<?php echo $key; ?>')"><?php echo $stateName[$key]; ?></button>
+        <input type="hidden" name="<?php echo $key; ?>" id="<?php echo $key; ?>" value="<?php echo $val; ?>" />
+	<?php $first++; ?>        
+	</div>        
+	<?php endforeach; ?>      
+	
+    <div class="col-sm-2 padding-5">
+    	<label style="display:block; visibility:hidden;">&nbsp;</label>
+    	<select class="form-control input-sm" name="selectState" id="selectState">
+        	<?php echo selectStateTime($selectState); ?>
+        </select>
+    </div>
+    <div class="col-sm-1 col-1-harf padding-5">
+    	<label>เริ่มต้น</label>
+        <select class="form-control input-sm" name="fhour" id="fhour">
+        	<?php echo selectTime($fhour); ?>
+        </select>
+    </div>
+    <div class="col-sm-1 col-1-harf padding-5 last">
+    	<label>สิ้นสุด</label>
+        <select class="form-control input-sm" name="thour" id="thour">
+        	<?php echo selectTime($thour); ?>
+        </select>
+    </div>
+    <div class="col-sm-1 padding-5 last">
+ 		<label style="display:block; visibility:hidden;">&nbsp;</label>
+        <button type="button" class="btn btn-primary btn-sm btn-block" onClick="getSearch()">ใช้ตัวกรอง</button>
+    </div> 
+    
+	
 </div>
+
 <input type="hidden" name="viewType" id="viewType" value="<?php echo $vt; ?>" />
 </form>
 <hr style='border-color:#CCC; margin-top: 15px; margin-bottom:0px;' />
 <?php
 //--------------------  เงื่อนไข ------------------//
+	
 	$where = "WHERE order_status = 1 AND role IN(1, 4) ";
+		
 	if( $s_ref != '' OR $s_cus != '' OR $s_emp != '' OR $from != '' )
 	{
 		if( $s_ref != '' )
@@ -701,6 +768,7 @@ $('#modal_approve_edit').on('shown.bs.modal', function () {  $('#edit_bill_passw
 				$in = onlineOrderByCustomer($s_cus);
 				if( $in !== FALSE )
 				{
+					
 					$where .= "AND id_order IN(".$in.") ";
 				}
 				else
@@ -744,17 +812,33 @@ $('#modal_approve_edit').on('shown.bs.modal', function () {  $('#edit_bill_passw
 		}
 		if( $from != '' )
 		{
-			createCookie('orderFrom', $from);
-			if( $to != '' ){ createCookie('orderTo', $to); }
-			$to	= $to == '' ? toDate($from) : toDate($to);
-			$from = fromDate($from);		
-			$where .= "AND ( date_add BETWEEN '".$from."' AND '".$to."' ) ";	
+				if( $selectState != '' )
+				{
+					$from = dbDate($from).' '.$fhour.':00';
+					$to	= $to == '' ? dbDate($from). ' '.$thour.':00' : dbDate($to). ' '.$thour.':00';
+					$in 	= getOrderStateInTime($selectState, $from, $to);
+					if( $in != FALSE )
+					{
+						$where .= "AND id_order IN(".$in.") ";
+					}
+					else
+					{
+						$where .= "AND id_order IN(0) ";	
+					}
+				}
+				else
+				{
+					$to	= $to == '' ? toDate($from) : toDate($to);
+					$from = fromDate($from);		
+					$where .= "AND date_add>= '".$from."' AND date_add <='".$to."' ";
+				}
 		}
 	}
 	//$where .= "AND valid != 2 ";
-	$where .= $vt == 2 ? "AND payment = 'ออนไลน์' " : '';
-	$where .= "ORDER BY date_add DESC";		
-
+	$where .= $vt == 2 ? "AND payment = 'ออนไลน์' " : ($vt == 3 ? "AND payment IN('เครดิต', 'เงินสด') " : '');
+	$state_in = getStateIn($state);
+	$where .= $state_in == '' ? "" : "AND current_state IN(".$state_in.") ";
+	$where .= "ORDER BY id_order DESC";	
 ?>		
 <div class='row' id='result'>			
 	<div class='col-sm-12' id='search-table'>
@@ -872,4 +956,4 @@ $('#modal_approve_edit').on('shown.bs.modal', function () {  $('#edit_bill_passw
 </script>
 
 <script src="script/order.js"></script>
->>>
+>>

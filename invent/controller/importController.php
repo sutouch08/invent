@@ -44,7 +44,8 @@ if( isset( $_GET['importStockZone'] ) )
 	$suc = 0;
 	$err = 0;
 	$skip = 0;
-	$skr = array();
+	//$skr = array();
+	
 	$file = isset( $_FILES['uploadFile'] ) ? $_FILES['uploadFile'] : FALSE;
 	 $file_path 	= "../../upload/";
     $upload	= new upload($file);
@@ -62,8 +63,9 @@ if( isset( $_GET['importStockZone'] ) )
             
             $excel = PHPExcel_IOFactory::load($upload->file_dst_pathname);
             $max = $excel->getActiveSheet()->getHighestRow();
-            
             $row = 2; 
+			$skr = '<table class="table table-striped">';
+			$skr .= '<thead><tr><th style="width:5%; text-align:center;">ลำดับ</th><th>Zone barcode</th><th>Zone ID</th><th>Item Code</th><th>Item ID</th><th>QTY</th></tr></thead>';
             while($row <= $max)
 			{			
 				set_time_limit(60);			
@@ -90,20 +92,26 @@ if( isset( $_GET['importStockZone'] ) )
 					}
 					else
 					{
+						$qa = stock_movement('in', 9, $id_pa, get_warehouse_by_zone($idZone), $qty, 'บันทึกยอดยกมา', dbDate('', TRUE), $idZone);	
 						$suc++;
 					}
 				}
 				else
 				{
-					$arr = array("zone" => $zone, "id_zone" => $idZone, "item" => $item, "id_pa" => $id_pa, "qty" => $qty);
-					array_push($skr, $arr);
+					//$arr = array("zone" => $zone, "id_zone" => $idZone, "item" => $item, "id_pa" => $id_pa, "qty" => $qty);
+					//array_push($skr, $arr);
 					$skip++;
+					$skr .= '<tr><td align="center">'. ($skip).'</td><td>'. $zone .'</td><td>'. ($idZone === FALSE ? 'ไม่พบโซน' : $idZone) .'</td><td>'.$item.'</td><td>'. ($id_pa === FALSE ? 'ไม่พบสินค้า' : $id_pa) .'</td><td>'.$qty.'</td></tr>';
+					
 				}
 
                	$row++; 
          }
-		 $sc = array( "imported" => $suc, "total" => ($max -1), "fail" => $err, "skip" => $skip, "SkipItem" => $skr);
-		 $sc = json_encode($sc);
+		 $skr .= '</table>';
+		 $sc .= "นำเข้า : ". $max-1 . " รายการ <br/> สำเร็จ : ". $suc ." รายการ <br/> ไม่สำเร็จ : ". $skip ." รายการ";
+		 $sc .= " | ".$skr;
+		 //$sc = array( "imported" => $suc, "total" => ($max -1), "fail" => $err, "skip" => $skip, "SkipItem" => $skr);
+		// $sc = json_encode($sc);
            // $sc = 'imported: '.$suc.' of '.$max.' , fail: '.$err;
        }
     }

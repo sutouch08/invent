@@ -682,14 +682,29 @@ if( isset( $_GET['updateDeliveryFee'] ) )
 
 if( isset( $_GET['clearFilter'] ) )
 {
-	deleteCookie('s_ref');
-	deleteCookie('s_cus');
-	deleteCookie('s_emp');
-	deleteCookie('orderFrom');
-	deleteCookie('orderTo');
-	deleteCookie('viewType');
-	deleteCookie('closed');
-	deleteCookie('delivered');
+	$cookie = array(
+							's_ref', 
+							's_cus', 
+							's_emp', 
+							'orderFrom', 
+							'orderTo', 
+							'viewType', 
+							'closed', 
+							'delivered', 
+							'state_1', 
+							'state_3',
+							'state_4',
+							'state_5',
+							'state_11',
+							'state_10',
+							'selectState',
+							'fhour',
+							'thour'
+						);
+	foreach( $cookie as $name)
+	{
+		deleteCookie($name);
+	}
 	echo 'success';	
 }
 
