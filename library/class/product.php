@@ -926,7 +926,7 @@ public function all_qty_and_cost($id_warehouse =""){
 
 public function stock_qty_by_warehouse($id_product_attribute, $id_warehouse){
 	$qty = 0;
-	$sql = dbQuery("SELECT SUM(qty) AS qty FROM tbl_stock JOIN tbl_zone ON tbl_stock.id_zone = tbl_zone.id_zone WHERE id_product_attribute = ".$id_product_attribute." AND id_warehouse = ".$id_warehouse);
+	$sql = dbQuery("SELECT SUM(qty) AS qty FROM tbl_stock JOIN tbl_zone ON tbl_stock.id_zone = tbl_zone.id_zone WHERE id_product_attribute = ".$id_product_attribute." AND id_warehouse IN(".$id_warehouse.")");
 	$row = dbNumRows($sql);
 	if($row > 0 ){
 		$rs = dbFetchArray($sql);
@@ -937,7 +937,7 @@ public function stock_qty_by_warehouse($id_product_attribute, $id_warehouse){
 
 public function move_qty_by_warehouse($id_product_attribute, $id_warehouse){
 	$qty = 0;
-	$sql = dbQuery("SELECT SUM(qty_move) AS qty FROM tbl_move WHERE id_product_attribute = ".$id_product_attribute." AND id_warehouse = ".$id_warehouse);
+	$sql = dbQuery("SELECT SUM(qty_move) AS qty FROM tbl_move WHERE id_product_attribute = ".$id_product_attribute." AND id_warehouse IN(".$id_warehouse.")");
 	$row = dbNumRows($sql);
 	if($row > 0){
 		$rs = dbFetchArray($sql);
@@ -946,10 +946,11 @@ public function move_qty_by_warehouse($id_product_attribute, $id_warehouse){
 	return $qty;
 }
 
+
 public function cancle_qty_by_warehouse($id_product_attribute, $id_warehouse)
 {
 	$qty = 0;
-	$sql = dbQuery("SELECT SUM(qty) AS qty FROM tbl_cancle WHERE id_product_attribute = ".$id_product_attribute." AND id_warehouse = ".$id_warehouse);
+	$sql = dbQuery("SELECT SUM(qty) AS qty FROM tbl_cancle WHERE id_product_attribute = ".$id_product_attribute." AND id_warehouse IN(".$id_warehouse.")");
 	$row = dbNumRows($sql);
 	if($row > 0 ){
 		$rs = dbFetchArray($sql);
@@ -961,7 +962,7 @@ public function cancle_qty_by_warehouse($id_product_attribute, $id_warehouse)
 public function buffer_qty_by_warehouse($id_product_attribute, $id_warehouse)
 {
 	$qty = 0;
-	$sql = dbQuery("SELECT SUM(qty) AS qty FROM tbl_buffer WHERE id_product_attribute = ".$id_product_attribute." AND id_warehouse = ".$id_warehouse);
+	$sql = dbQuery("SELECT SUM(qty) AS qty FROM tbl_buffer WHERE id_product_attribute = ".$id_product_attribute." AND id_warehouse IN(".$id_warehouse.")");
 	$row = dbNumRows($sql);
 	if($row > 0 ){
 		$rs = dbFetchArray($sql);

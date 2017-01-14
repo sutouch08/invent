@@ -792,7 +792,7 @@ function setColorbox()
                 	<button type="button" class="btn btn-sm btn-warning" onClick="goEdit(<?php echo $id; ?>)"><i class="fa fa-pencil"></i></button>
 				<?php endif; ?>                    
                 <?php if( $delete ) : ?>
-                	<button type="button" class="btn btn-sm btn-danger" onClick="confirmRemove(<?php echo $id; ?>, '<?php echo $rs['product_code']; ?>')"><i class="fa fa-pencil"></i></button>
+                	<button type="button" class="btn btn-sm btn-danger" onClick="confirmRemove(<?php echo $id; ?>, '<?php echo $rs['product_code']; ?>')"><i class="fa fa-trash"></i></button>
                 <?php endif; ?>
                 </td>
             </tr>

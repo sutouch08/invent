@@ -141,43 +141,16 @@ if(isset($_GET['add'])) :
 <!----------------------------------------- Category Menu ---------------------------------->
 <div class='row'>
 	<div class='col-sm-12'>
-		<ul class='nav nav-tabs' role='tablist' style='background-color:#EEE'>
-<?php	$sql = dbQuery("SELECT id_category, category_name FROM tbl_category WHERE parent_id = 0 AND level_depth = 1 ORDER BY position ASC"); ?>
-<?php	if( dbNumRows($sql) > 0 ) :	?>
-<?php		while( $rs = dbFetchArray($sql) ) : ?>
-<?php			$sqr = dbQuery("SELECT id_category, category_name FROM tbl_category WHERE parent_id = ".$rs['id_category']." ORDER BY position ASC");	 ?>
-<?php			if( dbNumRows($sqr) > 0 ) :							?>
-					<li class="dropdown">
-                    	<a id="ul-<?php echo $rs['id_category']; ?>" class="dropdown-toggle" data-toggle="dropdown" href="javescript:void(0)"><?php echo $rs['category_name']; ?> <span class="caret"></span></a>
-                        	<ul class="dropdown-menu" role="menu" aria-labelledby="ul-<?php echo $rs['id_category']; ?>">
-                            	<li class="">
-                                	<a href="#cat-<?php echo $rs['id_category']; ?>" tabindex="-1" role="tab" data-toggle="tab" onClick="getCategory(<?php echo $rs['id_category']; ?>)"><?php echo $rs['category_name']; ?></a>
-								</li>
-				<?php 	while( $rd = dbFetchArray($sqr) ) : ?>
-                				<li class="">
-                                	<a href="#cat-<?php echo $rd['id_category']; ?>" tabindex="-1" role="tab" data-toggle="tab" onClick="getCategory(<?php echo $rd['id_category']; ?>)"><?php echo $rd['category_name']; ?></a>
-								</li>
-                <?php 	endwhile; ?>
-							</ul>
-						</li>
-<?php 			else : 		?>
-					<li class="">
-                    	<a href="#cat-<?php echo $rs['id_category']; ?>" role="tab" data-toggle="tab" onClick="getCategory(<?php echo $rs['id_category']; ?>)"><?php echo $rs['category_name']; ?></a>
-<?php			endif; 														?>
-					</li>
-<?php		endwhile; 								?>
-<?php	endif; 											?>
+		<ul class='nav navbar-nav' role='tablist' style='background-color:#EEE'>
+		<?php echo categoryTabMenu('order'); ?>
 		</ul>
 	</div><!---/ col-sm-12 ---->
 </div><!---/ row -->
 <hr style='border-color:#CCC; margin-top: 0px; margin-bottom:0px;' />
 <div class='row'>
-	<div class='col-sm-12'>
+	<div class='col-sm-12'>		
 		<div class='tab-content' style="min-height:1px; padding:0px;">
-<?php	$query = dbQuery("SELECT id_category, category_name FROM tbl_category WHERE id_category !=0"); ?>
-<?php	while($c = dbFetchArray($query)) : 	?>
-				<div class="tab-pane" id="cat-<?php echo $c['id_category']; ?>"></div>
-<?php 	endwhile; ?>
+		<?php echo getCategoryTab(); ?>
 		</div>
 	</div>
 </div>
@@ -1198,5 +1171,29 @@ $("#btnAdd").click(function(e) {
 		setTimeout(function(){ adx = 0; $("#btnAdd").removeAttr("disabled"); }, 3000);
 	 }
 });
+</script>
+<script>
+	function expandCategory(el)
+	{
+		var className = 'open';
+		if (el.classList)
+		{
+    		el.classList.add(className)
+		}else if (!hasClass(el, className)){
+			el.className += " " + className
+		}
+	}
+
+	function collapseCategory(el)
+	{
+		var className = 'open';
+		if (el.classList)
+		{
+			el.classList.remove(className)
+		}else if (hasClass(el, className)) {
+			var reg = new RegExp('(\\s|^)' + className + '(\\s|$)')
+			el.className=el.className.replace(reg, ' ')
+  		}
+	}
 </script>
 <script src="script/order_online.js"></script>

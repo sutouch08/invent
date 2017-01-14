@@ -7,6 +7,66 @@ require '../function/adjust_helper.php';
 $id_employee = $_COOKIE['user_id'];
 //----------------- NEW CODE -------------------//
 
+
+//-------- Unsave adjust
+if( isset( $_GET['unsaveAdjust'] ) )
+{
+	$id_adj	= $_POST['id_adjust'];
+	$adj 		= new adjust($id_adj);	
+	$qs = $adj->getAllDetail($id_adj);
+	$err = 0;
+	
+	if( dbNumRows($qs) > 0 )
+	{
+		startTransection();
+		while( $rs = dbFetchObject($qs) )
+		{
+			if( $rs->status_up == 1 )
+			{
+				$reference = $adj->adjust_no;
+				$incQty 	= $rs->adjust_qty_add;
+				$decQty	= $rs->adjust_qty_minus;
+				$id_pa	= $rs->id_product_attribute;
+				$id_zone = $rs->id_zone;
+				$qty 		= ($incQty - $decQty) * -1;  //--- กลับยอดเพิ่มเป็นลด ลดเป็นเพิ่ม
+				$stock 	= stockInZone($id_pa, $id_zone);
+				$allowUnderZero	= allow_under_zero();
+				//---- ตรวจสอบ 
+				if( ( $stock + $qty ) < 0 && ! $allowUnderZero )
+				{
+					$err++;
+				}
+				else
+				{
+					//---- 1. เปลี่ยนสถานะ
+					$ra = $adj->setDetailStatus($rs->id_adjust_detail, 0);
+					
+					//---- 2. เปลี่ยนสถานะ ยอดต่าง
+					$rb = $rs->status_adjust != 0 ? $adj->setDiff($rs->status_adjust, 1) : TRUE;
+					//---- 3. เพิ่ม/ลด ยอดสต็อกในโซน
+					$rc = update_stock_zone($qty, $id_zone, $id_pa);
+					//---- 4. ลบ movement
+					$rd = delete_movement($reference, $id_pa, $id_zone);
+					if( $ra === TRUE && $rb === TRUE && $rc === TRUE && $rd === TRUE )
+					{
+						commitTransection();
+					}
+					else
+					{
+						$err++;
+						dbRollback();	
+					}
+				}
+			}
+		} //--- end while
+		endTransection();
+	}
+	$adj->setStatus($id_adj, 0);
+	$sc = $err == 0 ? 'success' : 'ยกเลิกไม่สำเร็จ '.$err.' รายการ';
+	echo $sc;
+}
+
+
 //-------  Save adjust 
 if( isset( $_POST['saveAdjust'] ) )
 {
@@ -24,6 +84,7 @@ if( isset( $_POST['saveAdjust'] ) )
 			if( $rs->status_up == 0 )
 			{
 				$qty = $rs->adjust_qty_add - $rs->adjust_qty_minus;
+				$movement_qty = $qty > 0 ? $rs->adjust_qty_add : $rs->adjust_qty_minus;
 				$type = $qty > 0 ? 'in' : 'out';
 				$reason = $qty > 0 ? 7 : 8 ;
 				$id_wh 	= get_warehouse_by_zone($rs->id_zone);
@@ -31,7 +92,7 @@ if( isset( $_POST['saveAdjust'] ) )
 				$ra = update_stock_zone($qty, $rs->id_zone, $rs->id_product_attribute);
 				
 				//--- 2. stock_movement
-				$rb = stock_movement($type, $reason, $rs->id_product_attribute, $id_wh, $qty, $adj->adjust_no, dbDate($adj->adjust_date, TRUE), $rs->id_zone);
+				$rb = stock_movement($type, $reason, $rs->id_product_attribute, $id_wh, $movement_qty, $adj->adjust_no, dbDate($adj->adjust_date, TRUE), $rs->id_zone);
 				
 				//--- 3. change status detail 
 				$rc = $adj->setDetailStatus($rs->id_adjust_detail, 1);
@@ -134,7 +195,7 @@ if( isset( $_GET['updateHeader'] ) )
 						'adjust_date'		=> dbDate($_POST['date'], TRUE),
 						'adjust_note'			=> $_POST['remark']
 					);
-	$rs = $adj->update($id_adj, $ds);				
+	$rs = $adj->update($id_adj, $ds);		
 	if( $rs )
 	{
 		dbQuery("UPDATE tbl_stock_movement SET date_upd = '".dbDate($_POST['date'], TRUE)."' WHERE reference = '".$adj->adjust_no."'");
@@ -320,7 +381,84 @@ if( isset( $_GET['updateDetail'] ) )
 }
 
 
-	
+
+//------ Delete Adjust Order
+if( isset( $_GET['deleteAdjust'] ) )
+{
+	$id_adj = $_POST['id_adjust'];
+	$adj = new adjust($id_adj);
+	$qs = $adj->getAllDetail($id_adj);
+	$err = 0;
+	if( dbNumRows($qs) > 0 )
+	{
+		startTransection();
+		while( $rs = dbFetchObject($qs) )
+		{
+			
+			if( $rs->status_up == 0 ) //----- ถ้ายังไม่บันทึก
+			{
+				//--- ลบรายการออกได้เลย
+				$ra = $adj->deleteDetail($rs->id_adjust_detail); 
+				$rd = $rs->status_adjust != 0 ? $adj->setDiff($rs->status_adjust, 0) : TRUE;
+				if( $ra && $rd )
+				{
+					commitTransection();	
+				}
+				else
+				{
+					$err++;
+					dbRollback();
+				}
+			}
+			//---- ถ้าบันทึกแล้ว 
+			//-------- ต้องตรวจสอบ ว่าหากมีการลดหรือเพิ่มยอดแล้วสต็อกติดลบหรือไม่
+			//----------- ถ้าตรวจสอบผ่านแล้ว  1. ลบรายการ(เปลี่ยนสถานะยอดต่างถ้ามี)   2. เพิ่ม/ลด ยอดสต็อกในโซน  3. ลบความเคลื่อนไหว
+			if( $rs->status_up == 1 )
+			{
+				$reference = $adj->adjust_no;
+				$incQty 	= $rs->adjust_qty_add;
+				$decQty	= $rs->adjust_qty_minus;
+				$id_pa	= $rs->id_product_attribute;
+				$id_zone = $rs->id_zone;
+				$qty 		= ($incQty - $decQty) * -1;  //--- กลับยอดเพิ่มเป็นลด ลดเป็นเพิ่ม
+				$stock 	= stockInZone($id_pa, $id_zone);
+				$allowUnderZero	= allow_under_zero();
+				if( ( $stock + $qty ) < 0 && ! $allowUnderZero )
+				{
+					$err++;
+				}
+				else
+				{
+					//---- 1. ลบรายการ
+					$ra = $adj->deleteDetail($rs->id_adjust_detail);	
+					$rd = $rs->status_adjust != 0 ? $adj->setDiff($rs->status_adjust, 0) : TRUE;
+					
+					//---- 2. เพิ่ม/ลด ยอดสต็อกในโซน
+					$rb = update_stock_zone($qty, $id_zone, $id_pa);
+					$rc = delete_movement($reference, $id_pa, $id_zone);
+					if( $ra && $rd && $rb && $rc )
+					{
+						commitTransection();
+					}
+					else
+					{
+						$err++;
+						dbRollback();	
+					}	
+				}	
+			}
+		}
+		endTransection();
+	}
+	if( $err == 0 )
+	{
+		dbQuery("DELETE FROM tbl_adjust WHERE id_adjust = ".$id_adj);
+	}
+	$sc = $err > 0 ? 'ลบรายการไม่สำเร็จบางรายการ กรุณาตรวจสอบรายการภายในเอกสาร' : 'success';
+	echo $sc;
+}
+
+//-----  Delete Adjust Detail	
 if( isset( $_POST['deleteDetail'] ) )
 {
 	$sc = 'success';
@@ -406,6 +544,8 @@ if( isset( $_POST['deleteDetail'] ) )
 	}
 	echo $sc;			
 }
+
+
 
 
 if( isset( $_GET['clearFilter'] ) )

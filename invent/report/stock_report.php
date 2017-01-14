@@ -1,254 +1,353 @@
-<?php 
-
-	$page_menu = "invent_stock_report";
-	$page_name = "รายงานสินค้าคงเหลือ";
-	$id_profile = $_COOKIE['profile_id'];
-	?>
+<?php  
+	$pageName = 'รายงานสินค้าคงเหลือ';  
+	include_once 'function/report_helper.php';
+?>
 <div class="container">
-<!-- page place holder --><form name='report_form' id='report_form' action='index.php?content=stock_report&stock_report=y' method='post'>
-<div class="row">
-	<div class="col-sm-6"><h3><span class="glyphicon glyphicon-list"></span>&nbsp;<?php echo $page_name; ?></h3></div>
+<div class="row top-row">
+	<div class="col-sm-6 top-col"><h4 class="title"><i class="fa fa-bar-chart"></i> <?php echo $pageName; ?></h4></div>
     <div class="col-sm-6">
-       <ul class="nav navbar-nav navbar-right">
-      	<li><a style='text-align:center; background-color:transparent;'><button type='button' class='btn btn-link' id='report'><span class='fa fa-file-text-o' style='color:#5cb85c; font-size:35px;'></span><br />รายงาน</button></a></li>
-		<li><a style='text-align:center; background-color:transparent;'><button type='button' class='btn btn-link' id='gogo'><span class='fa fa-file-excel-o' style='color:#5cb85c; font-size:35px;'></span><br />ส่งออก</button></a></li>
-       </ul>
+    	<p class="pull-right top-p">
+        	<button type="button" class="btn btn-sm btn-success" onclick="getReport()"><i class="fa fa-list"></i> รายงาน</button>
+            <button type="button" class="btn btn-sm btn-info" onclick="doExport()"><i class="fa fa-file-excel-o"></i> ส่งออก</button>
+            <button type="button" class="btn btn-sm btn-primary" onclick="printReport()"><i class="fa fa-print"></i> พิมพ์</button>
+        </p>
+    </div>
+</div><!--/ row -->
+<hr/>
+<form id="conditionForm">
+<div class="row">
+	<div class="col-sm-2">
+    	<label style="display:block;">สินค้า</label>
+    	<div class="btn-group width-100">
+        	<button type="button" id="btn-pdAll" class="btn btn-sm btn-primary width-50" onclick="toggleProduct(0)">ทั้งหมด</button>
+            <button type="button" id="btn-pdRange" class="btn btn-sm width-50" onclick="toggleProduct(1)">เป็นช่วง</button>
+        </div>
+    </div>
+    <div class="col-sm-2">
+    	<label class="not-show">From</label>
+        <input type="text" class="form-control input-sm" name="pdFrom" id="pdFrom" placeholder="จาก : เลือกสินค้า" disabled />
+    </div>
+    <div class="col-sm-2">
+    	<label class="not-show">TO</label>
+        <input type="text" class="form-control input-sm" name="pdTo" id="pdTo" placeholder="ถึง : เลือกสินค้า" disabled />
+    </div>
+    <div class="col-sm-2">
+    	<label style="display:block;">คลัง</label>
+        <div class="btn-group width-100">
+        	<button type="button" id="btn-whAll" class="btn btn-sm btn-primary width-50" onclick="toggleWh(0)">ทั้งหมด</button>
+            <button type="button" id="btn-whList" class="btn btn-sm width-50" onclick="toggleWh(1)">บางรายการ</button>
+        </div>
+    </div>
+    <div class="col-sm-2">
+    	<label style="display:block;">วันที่</label>
+        <div class="btn-group width-100">
+        	<button type="button" id="btn-current" class="btn btn-sm btn-primary width-50" onclick="toggleDate(0)">ปัจจุบัน</button>
+            <button type="button" id="btn-onDate" class="btn btn-sm width-50" onclick="toggleDate(1)">ณ วันที่</button>
+        </div>
+    </div>
+    <div class="col-sm-1 col-1-harf">
+    	<label class="not-show">date</label>
+        <input type="text" name="date" id="date" class="form-control input-sm" placeholder="ระบุวันที่" disabled />
+    </div>
+    
+    <input type="hidden" name="idFrom" id="idFrom" value="0" />
+    <input type="hidden" name="idTo" id="idTo" value="0" />
+    <input type="hidden" name="whOption" id="whOption" value="0" />
+    <input type="hidden" name="pdOption" id="pdOption" value="0" />
+    <input type="hidden" name="dateOption" id="dateOption" value="0" />
+</div><!--/ row condition -->
+<hr/>
+<div class="row">
+	<div class="col-sm-12" id="result">
+    	<!-- result will be here -->
+    </div>
+</div><!--/ row result -->
+<div class="modal fade" id="wh-modal" tabindex='-1' role='dialog' aria-labelledby='myModalLabel' aria-hidden='true'>
+	<div class='modal-dialog' id='modal' style="width:300px;">
+        <div class='modal-content'>
+            <div class='modal-header'>
+                <button type='button' class='close' data-dismiss='modal' aria-hidden='true'>&times;</button>
+                <h4 class='modal-title' id='modal_title'>เลือกคลัง</h4>                
+            </div>
+            <div class='modal-body' id='modal_body'>
+         	
+		<?php $qs = dbQuery("SELECT * FROM tbl_warehouse"); ?>
+        <?php if( dbNumRows($qs) > 0 ) : ?>
+        <?php	while( $rs = dbFetchObject($qs) ) : ?>
+        		<div class="col-sm-12">
+                	<label><input type="checkbox" class="chk" name="wh[<?php echo $rs->id_warehouse; ?>]" value="<?php echo $rs->id_warehouse; ?>" style="margin-right:10px;" /><?php echo $rs->warehouse_name; ?></label>
+                </div>
+		<?php 	endwhile; ?>                
+        <?php endif; ?>    
+        		<div class="divider" ></div>
+            </div>
+            <div class='modal-footer'>
+                <button type='button' class='btn btn-default btn-block' data-dismiss='modal'>ตกลง</button>
+            </div>
+        </div>
     </div>
 </div>
-<hr style='border-color:#CCC; margin-top: 0px; margin-bottom:0px;' />
-<!-- End page place holder -->
-<?php 
-	echo"
-<div class='row'>
-	<div class='col-lg-6'>
-    <table width='100%' style='border-right:0px'>
-    <tr><td colspan='4' style='text-align:center; border-bottom:1px solid #CCC; padding:10px;'><h4 style='margin:0px;'>สินค้า</h4></td></tr>
-    <tr><td style='width:20%; padding-top:10px;'><input type='radio' name='product' id='product1' value='0' checked='checked' /><label for='product1' style='padding-left:15px;'>ทั้งหมด</label></td><td colspan='3' style='padding-right:10px;'></td></tr>
-    <tr><td style='width:20%; padding-top:10px;'><input type='radio' name='product' id='product2' value='1'/><label for='product2' style='padding-left:15px; margin-right:10px;'>จาก</label></td>
-    	  <td style='width:35%; padding-top:10px;'><input type='hidden' name='product_from' id='product_from' /><input type='text' class='form-control' id='txt_product_from' disabled /></td>
-         <td style='width:10%; text-align: center; padding-top:10px;'>ถึง</td>
-          <td style='width:35%; padding-top:10px;'><input type='hidden' name='product_to' id='product_to' /><input type='text' class='form-control' id='txt_product_to' disabled /></td>
-	</tr>
-     <tr>
-     		<td style='width:20%; padding-top:10px;'><input type='radio' name='product' id='product3' value='2'/><label for='product3' style='padding-left:15px;'>เฉพาะ</label></td>
-            <td colspan ='3' style='width:30%; padding-right:10px; padding-top:10px;'><input type='hidden' name='product_selected' id='product_selected' /><input type='text' class='form-control' id='txt_product_selected' disabled /></td>	
-  </tr>
+</form>
+</div><!--/ container -->
+
+<script id="reportTemplate" type="text/x-handlebarsTemplate">
+<table class="table table-striped">
+	<thead>
+    	<tr>
+        	<th style="width:5%; text-align:center;">ลำดับ</th>
+            <th style="width:15%;">บาร์โค้ด</th>
+            <th style="width:20%;">รหัสสินค้า</th>
+            <th style="width:30%;">ชื่อสินค้า</th>
+            <th style="width:10%; text-align:right;">ทุน</th>
+            <th style="width:10%; text-align:right;">คงเหลือ</th>
+            <th style="width:10%; text-align:right;">มูลค่า</th>
+        </tr>
+    </thead>
+    <tbody>
+    {{#each this}}
+    	{{#if @last}}
+        	<tr style="font-size:12px;">
+            	<td colspan="5" align="right"><strong>รวม</strong></td>
+                <td align="right"><strong>{{ total_qty }}</strong></td>
+                <td align="right"><strong>{{ total_amount }}</strong></td>
+            </tr>
+        {{else}}
+        	<tr style="font-size:12px;">
+            	<td align="center">{{ no }}</td>
+                <td>{{ barcode }}</td>
+                <td>{{ reference }}</td>
+                <td>{{ product_name }}</td>
+                <td align="right">{{ cost }}</td>
+                <td align="right">{{ qty }}</td>
+                <td align="right">{{ amount }}</td>
+            </tr>
+        {{/if}}
+    {{/each}}
+    </tbody>
 </table>
-	</div>
-    <div class='col-lg-3'>
-    <table width='100%' style='border-right:0px'>
-    <tr><td colspan='2' style='text-align:center; border-bottom:1px solid #CCC; padding:10px;'><h4 style='margin:0px;'>คลัง</h4></td></tr>
-	<tr><td colspan='2' style='width:100%; padding-top:10px;'><input type='radio' name='warehouse' id='warehouse1' value='0'/><label for='warehouse1' style='padding-left:15px;'>ทุกคลัง</label></td></tr>
-    <tr><td style='width:30%; padding-top:10px;'><input type='radio' name='warehouse' id='warehouse2' value='1' checked='checked' /><label for='warehouse2' style='padding-left:15px;'>เฉพาะ :</label></td>
-    	  <td style='width:80%; padding-left:10px; padding-top:10px;'><select name='warehouse_selected' id='warehouse_selected' class='form-control' >"; warehouseList(); echo"</select></td>	
-    </tr>
-    </table>
-    </div>
-    <div class='col-lg-3'>
-    <table width='100%' style='border-right:0px'>
-    <tr><td colspan='2' style='text-align:center; border-bottom:1px solid #CCC; padding:10px;'><h4 style='margin:0px;'>วันที่</h4></td></tr>
-    <tr><td colspan='2' style='width:100%; padding-top:10px;'><input type='radio' name='date' id='date1' value='0' checked='checked' /><label for='date1' style='padding-left:15px;'>ปัจจุบัน</label></td></tr>
-    <tr><td style='width:40%; padding-top:10px;'><input type='radio' name='date' id='date2' value='1' /><label for='date2' style='padding-left:15px;'>ณ วันที่ :</label></td>
-    	  <td style='width:60%; padding-left:10px; padding-top:10px;'><input type='text' name='date_selected' id='date_selected' class='form-control input-sm' required='required'disabled='disabled' /></td>	
-    </tr>
-    </table>
-    </form>
-    </div>
-</div> ";	
-?>   
-<hr style='border-color:#CCC; margin-top: 15px; margin-bottom:15px;' />
-<div class='row'>
-	<div class='col-lg-12' id='result'></div>
-    </div>
-</div>     <input type='hidden' id='warehouse' value='1' /><input type='hidden' id='product' value='0' /><input type='hidden' id='view' value='0' />
+</script>
 <script>
-$(document).ready(function(e) {
-    $("#txt_product_from").autocomplete({
-		source:"controller/orderController.php?product_name",
-		autoFocus: true,
-		close: function(event,ui){
-			var data = $("#txt_product_from").val();
-			var arr = data.split(':');
-			//var id = arr[0];
-			var name = arr[1];
-			$("#product_from").val(name);
-			$(this).val(name);
-		}
-	});			
-});
-$(document).ready(function(e) {
-    $("#txt_product_to").autocomplete({
-		source:"controller/orderController.php?product_name",
-		autoFocus: true,
-		close: function(event,ui){
-			var data = $("#txt_product_to").val();
-			var arr = data.split(':');
-			//var id = arr[0];
-			var name = arr[1];
-			$("#product_to").val(name);
-			$(this).val(name);
-		}
-	});			
-});
-$(document).ready(function(e) {
-   $("#txt_product_selected").autocomplete({
-		source:"controller/orderController.php?product_name",
-		autoFocus: true,
-		close: function(event,ui){
-			var data = $("#txt_product_selected").val();
-			var arr = data.split(':');
-			var id = arr[0];
-			var name = arr[1];
-			$("#product_selected").val(id);
-			$(this).val(name);
-		}
-	});			
-});
-$(document).ready(function() {
-   	    $("#product1").change(function(){
-		$("#product").val(0);
-		$("#txt_product_from").attr("disabled","disabled");
-		$("#txt_product_to").attr("disabled","disabled");
-		$("#txt_product_selected").attr("disabled","disabled");
-	});
-});
-
-$(document).ready(function() {
-   	    $("#product2").change(function(){
-		$("#product").val(1);
-		$("#txt_product_from").removeAttr("disabled");
-		$("#txt_product_to").removeAttr("disabled");
-		$("#txt_product_selected").attr("disabled","disabled");
-		
-	});
-});
-
-$(document).ready(function() {
-   	    $("#product3").change(function(){
-		$("#product").val(2);
-		$("#txt_product_from").attr("disabled","disabled");
-		$("#txt_product_to").attr("disabled","disabled");
-		$("#txt_product_selected").removeAttr("disabled");
-	});
-});
-$(document).ready(function() {
-   	    $("#warehouse1").change(function(){
-		$("#warehouse_selected").attr("disabled","disabled");
-		$("#warehouse").val(0);
-	});
-});
-$(document).ready(function() {
-   	    $("#warehouse2").change(function(){
-		$("#warehouse_selected").removeAttr("disabled");
-		$("#warehouse").val(1);
-	});
-});
-$(document).ready(function() {
-   	    $("#date2").click(function(){
-		$("#date_selected").removeAttr("disabled");
-		$("#view").val(1);
-	});
-});
-$(document).ready(function() {
-   	    $("#date1").click(function(){
-		$("#date_selected").attr("disabled","disabled");
-		$("#view").val(0);
-	});
-});
-$(function() {
-    $("#date_selected").datepicker({
-      dateFormat: 'dd-mm-yy'
-    });
-  });
-$(document).ready(function(e) {
-    $("#gogo").click(function(){	
-		var product = $("#product").val();
-	var warehouse = $("#warehouse").val();
-	var view = $("#view").val();
-	if(view ==0){
-		var view_report = 'now';
-	}else if(view ==1){
-		var view_select = $("#date_selected").val();
-		if(view_select ==""){
-			alert("กรุณาเลือกวันที่ต้องการดูรายงาน");
-		}
-		var view_report = "view_selected="+view_select;
-	}else{
-		var view_report = 'now';
+function getReport()
+{
+	var whOption = $("#whOption").val();  //--- เลือกคลังแบบไหน
+	var pdOption = $("#pdOption").val();  //---- เลือกสินค้าแบบไหน
+	var dateOption = $("#dateOption").val();  //----- เลือกวันที่แบบไหน
+	var pdFrom = $("#pdFrom").val();  //--- สินค้าเริ่มต้น
+	var pdTo = $("#pdTo").val();  //---- สินค้าสุดท้าย
+	var idFrom = $("#idFrom").val();  //---- ไว้ตรวจสอบว่าสินค้าที่เลือกถูกต้อง
+	var idTo = $("#idTo").val(); //---- ไว้ตรวจสอบว่าสินค้าที่เลือกถูกต้อง
+	var wh 	= $(".chk:checked").length;
+	var date = $("#date").val();
+	//----- ตรวจสอบเงื่อนไขสินค้า
+	if( pdOption == 1 && ( pdFrom == '' || pdTo == '' || idFrom == 0 || idTo == 0 ) ){
+		swal("สินค้าไม่ถูกต้อง"); 
+		return false;	
 	}
-	if(product ==0){
-		var product_rank = 'product_all';
-	}else if(product ==1){
-		var product_from = $("#product_from").val();
-		var product_to = $("#product_to").val();
-		var product_rank = "product_from="+product_from+"&product_to="+product_to;
-	}else if(product==2){
-		var product_selected = $("#product_selected").val();
-		var product_rank = "product_selected="+product_selected+"&product_code_selected="+$("#txt_product_selected").val();
-	}else{
-		var product_rank = "product_all";
+	
+	//----- ตรวจสอบเงื่อนไขคลังสินค้า
+	if( whOption == 1 && wh == 0 ){
+		swal("กรุณาระบุคลังสินค้า");
+		return false;
 	}
-	if(warehouse ==0){
-		var warehouse_report = 'warehouse_all';
-	}else if(warehouse ==1){
-		var warehouse_select = $("#warehouse_selected").val();
-		var warehouse_report = "warehouse_selected="+warehouse_select;	
-	}else{
-		var warehouse_report = 'warehouse_all';
+	
+	//---- ตรวจสอบวันที่
+	if( dateOption == 1 && ! isDate(date) ){
+		swal("วันที่ไม่ถูกต้อง");
+		return false;
 	}
-	$("#report_form").attr("action","controller/reportController.php?export_stock_report&view="+view+"&"+view_report+"&product="+product+"&"+product_rank+"&warehouse="+warehouse+"&"+warehouse_report );
-	$(this).attr("type", "submit");
-});
-});
-
-$(document).ready(function(e) {
-    $("#report").click(function(e) {
-		get_report();
-    });
-});
-function get_report(){
-	$("#result").html("<h1>&nbsp;</h1><table style='width: 100%; border:0px;'><tr><td align='center'><i class='fa fa-spinner fa-spin fa-5x'></i><br/><h4>กำลังประมวลผล....</h4></td></tr></table>");
-	var product = $("#product").val();
-	var warehouse = $("#warehouse").val();
-	var view = $("#view").val();
-	if(view ==0){
-		var view_report = 'now';
-	}else if(view ==1){
-		var view_select = $("#date_selected").val();
-		if(view_select ==""){
-			alert("กรุณาเลือกวันที่ต้องการดูรายงาน");
-		}
-		var view_report = "view_selected="+view_select;
-	}else{
-		var view_report = 'now';
-	}
-	if(product ==0){
-		var product_rank = 'product_all';
-	}else if(product ==1){
-		var product_from = $("#product_from").val();
-		var product_to = $("#product_to").val();
-		var product_rank = "product_from="+product_from+"&product_to="+product_to;
-	}else if(product==2){
-		var product_selected = $("#product_selected").val();
-		var product_rank = "product_selected="+product_selected+"&product_code_selected="+$("#txt_product_selected").val();
-	}else{
-		var product_rank = "product_all";
-	}
-	if(warehouse ==0){
-		var warehouse_report = 'warehouse_all';
-	}else if(warehouse ==1){
-		var warehouse_select = $("#warehouse_selected").val();
-		var warehouse_report = "warehouse_selected="+warehouse_select;	
-	}else{
-		var warehouse_report = 'warehouse_all';
-	}
+	
+	var data = $("#conditionForm").serialize();
+	
+	load_in();
 	$.ajax({
-		url:"controller/reportController.php?stock_report&view="+view+"&"+view_report+"&product="+product+"&"+product_rank+"&warehouse="+warehouse+"&"+warehouse_report , type:"GET",cache:false,
-		success: function(dataset){
-			$("#result").html(dataset);
+		url:"report/reportController/stockReportController.php?reportStockBalance&report",
+		type:"POST", cache:"false", data: data,
+		success: function(rs){
+			load_out();
+			var source 	= $("#reportTemplate").html();
+			var data		= $.parseJSON(rs);
+			var output 	= $("#result");
+			render(source, data, output);
 		}
 	});
 		
 }
 
+function doExport()
+{
+	var whOption = $("#whOption").val();  //--- เลือกคลังแบบไหน
+	var pdOption = $("#pdOption").val();  //---- เลือกสินค้าแบบไหน
+	var dateOption = $("#dateOption").val();  //----- เลือกวันที่แบบไหน
+	var pdFrom = $("#pdFrom").val();  //--- สินค้าเริ่มต้น
+	var pdTo = $("#pdTo").val();  //---- สินค้าสุดท้าย
+	var idFrom = $("#idFrom").val();  //---- ไว้ตรวจสอบว่าสินค้าที่เลือกถูกต้อง
+	var idTo = $("#idTo").val(); //---- ไว้ตรวจสอบว่าสินค้าที่เลือกถูกต้อง
+	var wh 	= $(".chk:checked").length;
+	var date = $("#date").val();
+	//----- ตรวจสอบเงื่อนไขสินค้า
+	if( pdOption == 1 && ( pdFrom == '' || pdTo == '' || idFrom == 0 || idTo == 0 ) ){
+		swal("สินค้าไม่ถูกต้อง"); 
+		return false;	
+	}
+	
+	//----- ตรวจสอบเงื่อนไขคลังสินค้า
+	if( whOption == 1 && wh == 0 ){
+		swal("กรุณาระบุคลังสินค้า");
+		return false;
+	}
+	
+	//---- ตรวจสอบวันที่
+	if( dateOption == 1 && ! isDate(date) ){
+		swal("วันที่ไม่ถูกต้อง");
+		return false;
+	}
+	
+	var data = $("#conditionForm").serialize();
+	
+	load_in();
+	var token	= new Date().getTime();
+	var url 		= "report/reportController/stockReportController.php?reportStockBalance&export&"+data+"&token="+token;
+	get_download(token);
+	window.location.href = url;
+}
+
+function printReport()
+{
+	var whOption = $("#whOption").val();  //--- เลือกคลังแบบไหน
+	var pdOption = $("#pdOption").val();  //---- เลือกสินค้าแบบไหน
+	var dateOption = $("#dateOption").val();  //----- เลือกวันที่แบบไหน
+	var pdFrom = $("#pdFrom").val();  //--- สินค้าเริ่มต้น
+	var pdTo = $("#pdTo").val();  //---- สินค้าสุดท้าย
+	var idFrom = $("#idFrom").val();  //---- ไว้ตรวจสอบว่าสินค้าที่เลือกถูกต้อง
+	var idTo = $("#idTo").val(); //---- ไว้ตรวจสอบว่าสินค้าที่เลือกถูกต้อง
+	var wh 	= $(".chk:checked").length;
+	var date = $("#date").val();
+	//----- ตรวจสอบเงื่อนไขสินค้า
+	if( pdOption == 1 && ( pdFrom == '' || pdTo == '' || idFrom == 0 || idTo == 0 ) ){
+		swal("สินค้าไม่ถูกต้อง"); 
+		return false;	
+	}
+	
+	//----- ตรวจสอบเงื่อนไขคลังสินค้า
+	if( whOption == 1 && wh == 0 ){
+		swal("กรุณาระบุคลังสินค้า");
+		return false;
+	}
+	
+	//---- ตรวจสอบวันที่
+	if( dateOption == 1 && ! isDate(date) ){
+		swal("วันที่ไม่ถูกต้อง");
+		return false;
+	}
+	
+	var data = $("#conditionForm").serialize();
+	var url 	= "report/reportController/stockReportController.php?reportStockBalance&print&"+data;
+	var center = ($(document).width() - 800)/2;
+	window.open(url, "_blank", "width=800, height=900. left="+center+", scrollbars=yes");
+}
+
+$("#pdFrom").autocomplete({
+	source: 'controller/autoComplete.php?getProductCode',
+	autoFocus: true,
+	close: function(event,ui){
+		var rs = $.trim($(this).val());
+		var arr = rs.split(' | ');
+		var code = arr[0];
+		var idpd 	= arr[2];
+		if( isNaN(idpd) ){
+			idpd = 0;
+		}
+		$(this).val(code);
+		$("#idFrom").val(idpd);
+		var pdTo = $("#pdTo").val();
+		var pdFrom = $("#pdFrom").val();
+		var idFrom = $("#idFrom").val();
+		var idTo = $("#idTo").val();
+		if( pdTo != '' && pdFrom > pdTo){
+			$("#pdFrom").val(pdTo);
+			$("#pdTo").val(pdFrom);
+			$("#idFrom").val(idTo);
+			$("#idTo").val(idFrom);	
+		}
+		if( $("#pdFrom").val() != '' ){
+			$("#pdTo").focus();
+		}
+	}		
+});
+
+$("#pdTo").autocomplete({
+	source: 'controller/autoComplete.php?getProductCode',
+	autoFocus: true,
+	close: function(event,ui){
+		var rs = $.trim($(this).val());
+		var arr = rs.split(' | ');
+		var code = arr[0];
+		var idpd 	= arr[2];
+		if( isNaN(idpd) ){
+			idpd = 0;
+		}
+		$(this).val(code);
+		$("#idTo").val(idpd);
+		var pdTo = $("#pdTo").val();
+		var pdFrom = $("#pdFrom").val();
+		var idFrom = $("#idFrom").val();
+		var idTo = $("#idTo").val();
+		if( pdFrom != '' && pdFrom > pdTo){
+			$("#pdFrom").val(pdTo);
+			$("#pdTo").val(pdFrom);	
+			$("#idFrom").val(idTo);
+			$("#idTo").val(idFrom);	
+		}
+	}		
+});
+
+
+$("#date").datepicker({ dateFormat: 'dd-mm-yy' });
+function toggleDate(id)
+{
+	if( id == 0 ){
+		$("#dateOption").val(0);
+		$("#btn-onDate").removeClass('btn-primary');
+		$("#btn-current").addClass('btn-primary');
+		$("#date").attr("disabled", "disabled");
+	}
+	if( id == 1 ){
+		$("#dateOption").val(1);
+		$("#btn-current").removeClass('btn-primary');
+		$("#btn-onDate").addClass('btn-primary');
+		$("#date").removeAttr('disabled');
+	}
+}
+
+function toggleProduct(id)
+{
+	if( id == 0 ){
+		$("#pdOption").val(0);
+		$("#pdFrom").attr("disabled", "disabled");
+		$("#pdTo").attr("disabled", "disabled");
+		$("#btn-pdRange").removeClass('btn-primary');
+		$("#btn-pdAll").addClass('btn-primary');
+	}
+	if( id == 1 ){
+		$("#pdOption").val(1);
+		$("#pdFrom").removeAttr("disabled");
+		$("#pdTo").removeAttr("disabled");
+		$("#btn-pdAll").removeClass('btn-primary');
+		$("#btn-pdRange").addClass('btn-primary');
+	}
+}
+function toggleWh(id)
+{
+	if( id == 0 ){
+		$("#whOption").val(0);
+		$("#btn-whList").removeClass('btn-primary');
+		$("#btn-whAll").addClass('btn-primary');	
+	}
+	if( id == 1 ){
+		$("#whOption").val(1);
+		$("#btn-whAll").removeClass('btn-primary');
+		$("#btn-whList").addClass('btn-primary');
+		$("#wh-modal").modal('show');
+	}
+}
 </script>

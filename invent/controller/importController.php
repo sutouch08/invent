@@ -92,7 +92,7 @@ if( isset( $_GET['importStockZone'] ) )
 					}
 					else
 					{
-						$qa = stock_movement('in', 9, $id_pa, get_warehouse_by_zone($idZone), $qty, 'บันทึกยอดยกมา', dbDate('', TRUE), $idZone);	
+						$qa = stock_movement('in', 9, $id_pa, get_warehouse_by_zone($idZone), $qty, 'บันทึกยอดยกมา', date('Y-m-d H:i:s'), $idZone);	
 						$suc++;
 					}
 				}

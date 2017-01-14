@@ -956,4 +956,3 @@ $('#modal_approve_edit').on('shown.bs.modal', function () {  $('#edit_bill_passw
 </script>
 
 <script src="script/order.js"></script>
->>

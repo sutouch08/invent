@@ -49,7 +49,7 @@ function selectTime($time)
 	return $sc;		
 }
 
-
+/*
 function selectHour($hour)
 {
 	$sc = '';
@@ -71,7 +71,7 @@ function selectMin($min)
 	}
 	return $sc;
 }
-
+*/
 
 function getStateIn($state)
 {
@@ -494,7 +494,7 @@ function removeServiceFee($id_order)
 }
 
 //--------------------------------------------------------
-/*
+
 function selectHour($se = '')
 {
 	$sc	= '';
@@ -505,9 +505,9 @@ function selectHour($se = '')
 	}
 	return $sc;
 }
-*/
 
-/*
+
+
 function selectMin($se = '' )
 {
 	$sc = '<option value="00">00</option>';
@@ -521,7 +521,7 @@ function selectMin($se = '' )
 	}
 	return $sc;
 }
-*/
+
 
 function isPaymentExists($id_order)
 {

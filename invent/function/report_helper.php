@@ -1,4 +1,68 @@
 <?php
+//------ ใช้กับ รายงานสินค้าคงเหลือ
+function getTransectionQty($id_pa, $wh, $from, $to)
+{
+	$sc = array("move_in" => 0, "move_out" => 0);
+	$qr = "SELECT SUM(move_in) AS move_in, SUM(move_out) AS move_out FROM tbl_stock_movement ";
+	$qr .= "WHERE id_product_attribute = ".$id_pa." AND id_warehouse IN(".$wh.") AND date_upd >= '".$from."' AND date_upd <= '".$to."'";
+	$qs = dbQuery($qr);
+	if( dbNumRows($qs) == 1 )
+	{
+		$rs = dbFetchObject($qs);	
+		$sc['move_in']	= is_null($rs->move_in) ? 0 : $rs->move_in;
+		$sc['move_out'] = is_null($rs->move_out) ? 0 : $rs->move_out;
+	}
+	return $sc;
+}
+//------ ใช้กับ รายงานสินค้าคงเหลือ
+function warehouseIn($whs, $all = FALSE)
+{
+	$sc = FALSE;
+	$ds = '';
+	if( $all === TRUE)
+	{
+		$qs = dbQuery("SELECT id_warehouse FROM tbl_warehouse");
+		if( dbNumRows($qs) > 0 )
+		{
+			while( $rs = dbFetchObject($qs) )
+			{
+				$ds .= $rs->id_warehouse . ',';
+			}
+			$sc = trim($ds, ',');
+		}
+	}
+	else if( is_array($whs) === TRUE)
+	{
+		$ds = '';
+		foreach( $whs as $id )
+		{
+			$ds .= $id.','; 
+		}
+		$sc = trim($ds, ',');
+	}
+	else
+	{
+		$sc = $whs;
+	}
+	
+	return $sc;
+}
+
+//------ ใช้ใน export stock balance	
+function warehouseNameList($whList)
+{
+	$sc = '';
+	$qs = dbQuery("SELECT warehouse_name FROM tbl_warehouse WHERE id_warehouse IN(".$whList.")");
+	if( dbNumRows($qs) > 0 )
+	{
+		while( $rs = dbFetchObject($qs) )
+		{
+			$sc .= $rs->warehouse_name . ', ';	
+		}
+	}
+	return trim($sc, ', ');
+}
+	
 function removeVAT($amount, $vat=7)
 {
 	$re_vat	= ($vat + 100) / 100;

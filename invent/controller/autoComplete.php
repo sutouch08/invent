@@ -234,6 +234,25 @@ if( isset($_REQUEST['term']) && isset( $_GET['get_product_attribute'] ) )
 
 
 
+if( isset( $_REQUEST['term'] ) && isset( $_GET['getProductCode'] ) )
+{
+	$data = array();
+	$qs = dbQuery("SELECT id_product, product_code, product_name FROM tbl_product WHERE product_code LIKE '%".$_REQUEST['term']."%' OR product_name LIKE '%".$_REQUEST['term']."%' ORDER BY product_code ASC");
+	if( dbNumRows($qs) > 0 )
+	{
+		while( $rs = dbFetchObject($qs) )
+		{
+			$data[] = $rs->product_code.' | '.$rs->product_name.' | '.$rs->id_product;
+		}
+		$data = json_encode($data);
+	}
+	else
+	{
+		$data = 'nodata';	
+	}
+	echo $data;
+}
+
 if(isset($_REQUEST['term']) && isset($_GET['get_product_id'])){
 	$sql = dbQuery("SELECT id_product, product_code, product_name FROM tbl_product WHERE product_code LIKE'%".$_REQUEST['term']."%' OR product_name LIKE '%".$_REQUEST['term']."%'  ORDER BY id_product ASC");
 	$data = array();

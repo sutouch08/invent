@@ -1,3 +1,21 @@
+function unsaveAdjust()
+{
+	var id		= $("#id_adjust").val();
+	$.ajax({
+		url:"controller/productAdjustController.php?unsaveAdjust",
+		type:"POST", cache:"false", data:{ "id_adjust" : id },
+		success: function(rs){
+			var rs = $.trim(rs);
+			if( rs == 'success' ){
+				swal({title: 'เรียบร้อย', text: 'ยกเลิกการปรับยอดเรียบร้อยแล้ว', type: 'success', timer: 1000 });
+				setTimeout(function(){ window.location.reload(); }, 1200);
+			}else{
+				swal({title: "ข้อผิดพลาด", text: rs, type: "error" }, function(){ window.location.reload(); });
+			}
+		}
+	});
+}
+
 function editHeader()
 {
 	$("#adj_ref").removeAttr('disabled');
@@ -207,6 +225,43 @@ function deleteAdjustDetail(id)
                 if (rs == 'success') {
                     swal({ title: "สำเร็จ", text: "ลบรายการเรียบร้อยแล้ว", timer: 1000, type: "success" });
                     updateAdjustTable();
+                } else {
+                    swal("ข้อผิดพลาด!!", "ลบรายการไม่สำเร็จ กรุณาลองใหม่อีกครั้ง", "error");
+                }
+            }
+        });	
+}
+
+function getDelete(id, reference)
+{
+	swal({
+        title: 'ต้องการลบ ?',
+        text: 'คุณแน่ใจว่าต้องการลบ ' + reference + ' ?',
+        type: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#DD6855',
+        confirmButtonText: 'ใช่ ฉันต้องการลบ',
+        cancelButtonText: 'ยกเลิก',
+        closeOnConfirm: false
+    }, function() {
+        deleteAdjust(id);
+    });
+}
+
+function deleteAdjust(id)
+{
+	load_in();
+	$.ajax({
+            url: "controller/productAdjustController.php?deleteAdjust",
+            type:"POST",
+            cache: "false",
+            data: {"id_adjust" : id },
+            success: function(rs) {
+				load_out();
+                var rs = $.trim(rs);
+                if (rs == 'success') {
+                    swal({ title: "สำเร็จ", text: "ลบรายการเรียบร้อยแล้ว", timer: 1000, type: "success" });
+                    setTimeout(function(){ window.location.reload(); }, 1200);
                 } else {
                     swal("ข้อผิดพลาด!!", "ลบรายการไม่สำเร็จ กรุณาลองใหม่อีกครั้ง", "error");
                 }

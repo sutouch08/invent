@@ -19,6 +19,7 @@
         	<button type="button" class="btn btn-sm btn-warning" onClick="goBack()"><i class="fa fa-arrow-left"></i> กลับ</button>
             <?php if( isset( $_GET['id_adjust'] ) ) : ?>
             <button type="button" class="btn btn-sm btn-primary" onclick="getDiff()"><i class="fa fa-list"></i> ยอดต่าง</button>
+            <button type="button" class="btn btn-sm btn-info" onclick="unsaveAdjust()"><i class="fa fa-refresh"></i> ยกเลิกการปรับยอด</button>
             <button type="button" class="btn btn-sm btn-success" onclick="save()"><i class="fa fa-save"></i> บันทึก</button>
             <?php endif; ?>
         <?php endif; ?>
@@ -282,7 +283,7 @@
                     	<button type="button" class="btn btn-warning btn-xs" onClick="editAdjust(<?php echo $rs['id_adjust']; ?>)"><i class="fa fa-pencil"></i></button>
                     <?php endif; ?>
                     <?php if( $delete ) : ?>
-                    	<button type="button" class="btn btn-danger btn-xs" onClick="getDelete(<?php echo $rs['id_adjust']; ?>)"><i class="fa fa-trash"></i></button>
+                    	<button type="button" class="btn btn-danger btn-xs" onClick="getDelete(<?php echo $rs['id_adjust']; ?>, '<?php echo $rs['adjust_no']; ?>')"><i class="fa fa-trash"></i></button>
                     <?php endif; ?>
                     </td>
                 </tr>
