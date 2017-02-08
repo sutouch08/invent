@@ -12,6 +12,7 @@
 	include "function/support_helper.php";
 	require 'function/product_helper.php';
 	require 'function/qc_helper.php';
+	require 'function/order_helper.php';
 	function get_temp_qty($id_order, $id_product_attribute)
 	{
 		$qty = 0;
@@ -41,21 +42,23 @@
 		}
 		return $rs;
 	}
-	?>   
+
+	?>
 <div class="container">
 <!-- page place holder -->
-<div class="row">
-	<div class="col-sm-6"><h3 class="title"><i class="fa fa-file-text-o"></i>&nbsp;<?php echo $page_name; ?></h3>
-  </div>
+<div class="row top-row">
+	<div class="col-sm-6 top-col"><h4 class="title"><i class="fa fa-file-text-o"></i>&nbsp;<?php echo $page_name; ?></h4></div>
     <div class="col-sm-6">
-       <p class="pull-right">
+       <p class="pull-right top-p">
        <?php if(isset($_GET['view_detail'])&&isset($_GET['id_order'])) : ?>
-		    <a href='index.php?content=order_closed' style="text-decoration:none:"><button type='button' class='btn btn-warning'><i class="fa fa-arrow-left" style="margin-right:5px;"></i>กลับ</button></a>   		   
+		    <a href='index.php?content=order_closed' style="text-decoration:none:"><button type='button' class='btn btn-warning'><i class="fa fa-arrow-left" style="margin-right:5px;"></i>กลับ</button></a>   		
+		<?php else : ?>
+        <button type="button" class="btn btn-sm btn-warning" onclick="clearFilter()"><i class="fa fa-refresh"></i> Reset</button>               
 	   <?php endif; ?>
        </p>
     </div>
 </div>
-<hr style='border-color:#CCC; margin-top: 0px; margin-bottom:15px;' />
+<hr />
 <!-- End page place holder -->
 <!------------------------------------------ แสดงรายละเอียด ------------------------------------>
 <?php if(isset($_GET['print_packing_list']) && isset( $_GET['id_order']) ) : ?>
@@ -279,243 +282,173 @@
 <?php else : ?>
 <!----------------------------------------------------- แสดงรายการ -------------------------------------------------->
 <?php
-	if( isset($_POST['from_date']) && $_POST['from_date'] !=""){ setcookie("order_from_date", date("Y-m-d", strtotime($_POST['from_date'])), time() + 3600, "/"); }
-	if( isset($_POST['to_date']) && $_POST['to_date'] != ""){ setcookie("order_to_date",  date("Y-m-d", strtotime($_POST['to_date'])), time() + 3600, "/"); }
+	$ds	= array(
+								'fromDate' 	=> isset( $_POST['from_date'] ) ? $_POST['from_date'] : ( getCookie('fromDate') ? getCookie('fromDate') : '' ),
+								'toDate'		=> isset( $_POST['to_date'] ) ? $_POST['to_date'] : ( getCookie('toDate') ? getCookie('toDate') : '' ),
+								'reference'	=> isset( $_POST['reference'] ) ? $_POST['reference'] : ( getCookie('reference') ? getCookie('reference') : '' ),
+								'cusName'	=> isset( $_POST['cusName'] ) ? $_POST['cusName'] : ( getCookie('cusName') ? getCookie('cusName') : '' ),
+								'empName'	=> isset( $_POST['empName'] ) ? $_POST['empName'] : ( getCookie('empName') ? getCookie('empName') : '' )
+						);
+	$os	= array(							
+								'order'		=> isset( $_POST['order'] ) ? $_POST['order'] : ( getCookie('order') ? getCookie('order') : 0),
+								'consign'		=> isset( $_POST['consign'] ) ? $_POST['consign'] : ( getCookie('consign') ? getCookie('consign') : 0 ),
+								'sponsor'		=> isset( $_POST['sponsor'] ) ? $_POST['sponsor'] : ( getCookie('sponsor') ? getCookie('sponsor') : 0 ),
+								'support'		=> isset( $_POST['support'] ) ? $_POST['support'] : ( getCookie('support') ? getCookie('support') : 0 ),
+								'reform'		=> isset( $_POST['reform'] ) ? $_POST['reform'] : ( getCookie('reform') ? getCookie('reform') : 0 ),
+								'sortDate'	=> isset( $_POST['sortDate'] ) ? $_POST['sortDate'] : ( getCookie('sortDate') ? getCookie('sortDate') : 0 ) //--- 0 => sort by date_add,  1 => sort by date_upd
+						);
+							
+	$btn = array();		
+	$role_in = '';				
+	foreach( $ds as $key => $val )
+	{
+		if( $val !== '' )
+		{
+			createCookie($key, $val);
+		}
+	}
+	
+	foreach( $os as $key => $val )
+	{
+		createCookie($key, $val);
+		$btn[$key]	= $val != 0 ? 'btn-primary' : '';
+		$role_in .= $key != 'sortDate' ? ($val == 0 ? '' : ($val == 26 ? '2,6,' : $val.',')) : '';
+	}
+	$role_in = trim($role_in, ',');
+	$dateAdd = $os['sortDate'] == 0 ? 'btn-primary' : '';
+	$dateUpd = $os['sortDate'] == 1 ? 'btn-primary' : '';
 	$paginator = new paginator();
-?>	
+	$get_rows = isset( $_POST['get_rows'] ) ? $_POST['get_rows'] : ( getCookie('get_rows') ? getCookie('get_rows') : 50 );
+	$paginator->setcookie_rows($get_rows);
+?>
+
 <form  method='post' id='form'>
-<div class='row'>
-	<div class='col-lg-2 col-md-2 col-sm-3 col-sx-3'>
-			<label>เงื่อนไข</label>
-			<select class='form-control' name='filter' id='filter'>
-				<option value='customer' <?php if( isset($_POST['filter']) && $_POST['filter'] =="customer"){ echo "selected"; }else if( isset($_COOKIE['order_filter']) && $_COOKIE['order_filter'] == "customer"){ echo "selected"; } ?> >ลูกค้า</option>
-				<option value='reference'<?php if( isset($_POST['filter']) && $_POST['filter'] =="reference"){ echo "selected"; }else if( isset($_COOKIE['order_filter']) && $_COOKIE['order_filter'] == "reference"){ echo "selected"; } ?>>เลขที่เอกสาร</option>
-				<option value='sale' <?php if( isset($_POST['filter']) && $_POST['filter'] =="sale"){ echo "selected"; }else if( isset($_COOKIE['order_filter']) && $_COOKIE['order_filter'] == "sale"){ echo "selected"; } ?>>พนักงานขาย</option>
-			</select>
-		
-	</div>	
-	<div class='col-lg-3 col-md-3 col-sm-3 col-sx-3'>
-    	<label>คำค้น</label>
-        <?php 
-			$value = '' ; 
-			if(isset($_POST['search-text']) && $_POST['search-text'] !="") : 
-				$value = $_POST['search-text']; 
-			elseif(isset($_COOKIE['order_search-text'])) : 
-				$value = $_COOKIE['order_search-text']; 
-			endif; 
-		?>
-		<input class='form-control' type='text' name='search-text' id='search-text' placeholder="ระบุคำที่ต้องการค้นหา" value='<?php echo $value; ?>' />	
-	</div>	
-	<div class='col-lg-2 col-md-2 col-sm-2 col-sx-2'>
-		<label>จากวันที่</label>
-            <?php 
-				$value = ""; 
-				if(isset($_POST['from_date']) && $_POST['from_date'] != "") : 
-					$value = date("d-m-Y", strtotime($_POST['from_date'])); 
-				elseif( isset($_COOKIE['order_from_date'])) : 
-					$value = date("d-m-Y", strtotime($_COOKIE['order_from_date'])); 
-				endif; 
-				?>
-			<input type='text' class='form-control' name='from_date' id='from_date' placeholder="ระบุวันที่" style="text-align:center;"  value='<?php echo $value; ?>'/>
-	</div>	
-	<div class='col-lg-2 col-md-2 col-sm-2 col-sx-2'>
-		<label>ถึงวันที่</label>
-            <?php
-				$value = "";
-				if( isset($_POST['to_date']) && $_POST['to_date'] != "" ) :
-				 	$value = date("d-m-Y", strtotime($_POST['to_date'])); 
-				 elseif( isset($_COOKIE['order_to_date']) ) :
-					$value = date("d-m-Y", strtotime($_COOKIE['order_to_date']));
-				 endif;
-			?>  
-			<input type='test' class='form-control'  name='to_date' id='to_date' placeholder="ระบุวันที่" style="text-align:center" value='<?php echo $value; ?>' />
-	</div>
-	<div class='col-lg-2 col-md-2 col-sm-2 col-sx-2'>
-    	<label style="visibility:hidden">show</label>
-		<button class='btn btn-primary btn-block' id='search-btn' type='button'><i class="fa fa-search"></i>&nbsp;ค้นหา</button>
-	</div>	
-	<div class='col-lg-1 col-md-1 col-sm-1 col-sx-1'>
-    	<label style="visibility:hidden">show</label>
-		<button type='button' class='btn btn-danger' onclick="window.location.href='controller/billController.php?clear_filter'"><i class='fa fa-refresh'></i>&nbsp;reset</button>
-	</div>
+<div class="row">
+	<div class="col-sm-1 col-1-harf padding-5">
+    	<label>เอกสาร</label>
+        <input type="text" class="form-control input-sm filter" name="reference" id="reference" placeholder="ค้นเลขที่เอกสาร" value="<?php echo $ds['reference']; ?>" />
+    </div>
+    <div class="col-sm-1 col-1-harf padding-5">
+    	<label>ลูกค้า</label>
+        <input type="text" class="form-control input-sm filter" name="cusName" id="cusName" placeholder="ค้นหาชื่อลูกค้า" value="<?php echo $ds['cusName']; ?>" />
+    </div>
+    <div class="col-sm-1 col-1-harf padding-5">
+    	<label>พนักงาน</label>
+        <input type="text" class="form-control input-sm filter" name="empName" id="empName" placeholder="ค้นหาชื่อพนักงาน" value="<?php echo $ds['empName']; ?>" />        
+    </div>
+    <div class="col-sm-2 padding-5">
+    	<label style="display:block;">วันที่</label>
+        <input type="text" class="form-control input-sm input-discount text-center" name="from_date" id="from_date" value="<?php echo $ds['fromDate']; ?>" />
+        <input type="text" class="form-control input-sm input-unit text-center" name="to_date" id="to_date" value="<?php echo $ds['toDate']; ?>" />
+    </div>
+    <div class="col-sm-2 padding-5">
+    	<label style="display:block; visibility:hidden">sort date</label>
+        <div class="btn-group width-100">
+    		<button type="button" class="btn btn-sm width-50 <?php echo $dateAdd; ?>" id="btn-dateAdd" onclick="toggleDate('dateAdd')">วันที่เอกสาร</button>
+            <button type="button" class="btn btn-sm width-50 <?php echo $dateUpd; ?>" id="btn-dateUpd" onclick="toggleDate('dateUpd')">วันที่ปรับปรุง</button>
+		</div>            
+    </div>
+    <div class="col-sm-3 col-3-harf padding-5 last">
+    	<label style="display:block; visibility:hidden;">วันที่</label>
+    	<div class="btn-group width-100">
+            <button type="button" class="btn btn-sm width-20 <?php echo $btn['order']; ?>" id="btn-order" onclick="toggleOrderType('order', 1)">ขาย</button>
+            <button type="button" class="btn btn-sm width-20 <?php echo $btn['consign']; ?>" id="btn-consign" onclick="toggleOrderType('consign', 5)">ฝากขาย</button>
+            <button type="button" class="btn btn-sm width-20 <?php echo $btn['sponsor']; ?>" id="btn-sponsor" onclick="toggleOrderType('sponsor', 4)">สโมสร</button>
+            <button type="button" class="btn btn-sm width-20 <?php echo $btn['support']; ?>" id="btn-support" onclick="toggleOrderType('support', 7)">อภินันท์</button>
+            <button type="button" class="btn btn-sm width-20 <?php echo $btn['reform']; ?>" id="btn-reform" onclick="toggleOrderType('reform', 26)">แปรสภาพ</button> 
+        </div>
+    </div>
+    <input type="hidden" name="order" id="order" value="<?php echo $os['order']; ?>" />
+    <input type="hidden" name="consign" id="consign" value="<?php echo $os['consign']; ?>" />
+    <input type="hidden" name="sponsor" id="sponsor" value="<?php echo $os['sponsor']; ?>" />
+    <input type="hidden" name="support" id="support" value="<?php echo $os['support']; ?>" />
+    <input type="hidden" name="reform" id="reform" value="<?php echo $os['reform']; ?>" />
+    <input type="hidden" name="sortDate" id="sortDate" value="<?php echo $os['sortDate']; ?>" />
+    
 </div>
 </form>
 <hr style='border-color:#CCC; margin-top: 15px; margin-bottom:0px;' />
 <?php
-		$view = "";
-		if(isset($_POST['from_date']) && $_POST['from_date'] != "เลือกวัน"){$from = date('Y-m-d',strtotime($_POST['from_date'])); }else if( isset($_COOKIE['order_from_date'])){ $from = date('Y-m-d',strtotime($_COOKIE['order_from_date'])); }else{ $from = "";} 
-		if(isset($_POST['to_date']) && $_POST['to_date'] != "เลือกวัน"){ $to =date('Y-m-d',strtotime($_POST['to_date']));  }else if(  isset($_COOKIE['order_to_date'])){  $to =date('Y-m-d',strtotime($_COOKIE['order_to_date'])); }else{ $to = "";}
-		if($from=="" || $to ==""){ $view = getConfig("VIEW_ORDER_IN_DAYS"); 	}
-		if($view !=""){
-			$date = getLastDays($view);
-			$from = $date['from'];
-			$to = $date['to'];
-		}
-		if(isset($_POST['get_rows'])){$get_rows = $_POST['get_rows'];$paginator->setcookie_rows($get_rows);}else if(isset($_COOKIE['get_rows'])){$get_rows = $_COOKIE['get_rows'];}else{$get_rows = 50;}
+		
+		
 		
 		/****  เงื่อนไขการแสดงผล *****/
-		if(isset($_POST['search-text']) && $_POST['search-text'] !="" ) :
-			$text = $_POST['search-text'];
-			$filter = $_POST['filter'];
-			setcookie("order_search-text", $text, time() + 3600, "/");
-			setcookie("order_filter",$filter, time() +3600,"/");
-			switch( $_POST['filter']) :
-				case "customer" :
-					$in_cause = "";
-					$qs = dbQuery("SELECT id_customer FROM tbl_customer WHERE first_name LIKE'%$text%' OR last_name LIKE'%$text%' GROUP BY id_customer");
-					$rs = dbNumRows($qs);
-					$i=0;
-					if($rs>0) :
-						while($i<$rs) :
-							list($in) = dbFetchArray($qs);
-							$in_cause .="$in";
-							$i++;
-							if($i<$rs){ $in_cause .=","; 	}
-						endwhile;
-						$where = "WHERE id_customer IN($in_cause) AND current_state = 9 ORDER BY id_order DESC" ; 
-					else :
-						$where = "WHERE id_order != NULL";
-					endif;
-				break;
-				case "sale" :
-					$in_cause = "";
-					$qs = dbQuery("SELECT id_sale FROM tbl_sale LEFT JOIN tbl_employee ON tbl_sale.id_employee = tbl_employee.id_employee WHERE first_name LIKE'%$text%' OR last_name LIKE'%$text%'");
-					$rs = dbNumRows($qs);
-					$i=0;
-					$in ="";
-					if($rs>0) :
-						while($i<$rs) :
-							list($id_sale) = dbFetchArray($qs);
-							$in .="$id_sale";
-							$i++;
-							if($i<$rs){ $in .=","; }
-						endwhile;
-						$sq = dbQuery("SELECT id_customer FROM tbl_customer WHERE id_sale IN($in)");
-						$rs = dbNumRows($sq);
-						$n =0;
-						while($n<$rs) :
-							list($id_customer) = dbFetchArray($sq);
-							$in_cause .= "$id_customer";
-							$n++;
-							if($n<$rs){ $in_cause .= ","; }
-						endwhile;
-						$where = "WHERE id_customer IN($in_cause) AND current_state = 9 ORDER BY id_order DESC";
-					else :
-						$where = "WHERE id_order = NULL";
-					endif;
-				break;
-				case "reference" :
-				$where = "WHERE reference LIKE'%$text%' AND current_state = 9 ORDER BY reference";
-				break;
-			endswitch;
-		elseif(isset($_COOKIE['order_search-text']) && isset($_COOKIE['order_filter'])) :
-			$text = $_COOKIE['order_search-text'];
-			$filter = $_COOKIE['order_filter'];
-			switch( $filter) :
-				case "customer" :
-				$in_cause = "";
-				$qs = dbQuery("SELECT id_customer FROM tbl_customer WHERE first_name LIKE'%$text%' OR last_name LIKE'%$text%' GROUP BY id_customer");
-				$rs = dbNumRows($qs);
-				$i=0;
-				if($rs>0) :
-					while($i<$rs) :
-						list($in) = dbFetchArray($qs);
-						$in_cause .="$in";
-						$i++;
-						if($i<$rs){ $in_cause .=","; 	}
-					endwhile;
-					$where = "WHERE id_customer IN($in_cause) AND current_state = 9 ORDER BY id_order DESC";
-					else :
-						$where = "WHERE id_order != NULL";
-					endif;
-				break;
-				case "sale" :
-					$in_cause = "";
-					$qs = dbQuery("SELECT id_sale FROM tbl_sale LEFT JOIN tbl_employee ON tbl_sale.id_employee = tbl_employee.id_employee WHERE first_name LIKE'%$text%' OR last_name LIKE'%$text%'");
-					$rs = dbNumRows($qs);
-					$i=0;
-					$in ="";
-					if($rs>0) :
-						while($i<$rs) :
-							list($id_sale) = dbFetchArray($qs);
-							$in .="$id_sale";
-							$i++;
-							if($i<$rs){ $in .=","; }
-						endwhile;
-						$sq = dbQuery("SELECT id_customer FROM tbl_customer WHERE id_sale IN($in)");
-						$rs = dbNumRows($sq);
-						$n =0;
-						while($n<$rs) :
-							list($id_customer) = dbFetchArray($sq);
-							$in_cause .= "$id_customer";
-							$n++;
-							if($n<$rs){ $in_cause .= ","; }
-						endwhile;
-						$where = "WHERE id_customer IN($in_cause) AND current_state = 9 ORDER BY id_order DESC";
-					else :
-						$where = "WHERE id_order = NULL";
-					endif;
-				break;
-				case "reference" :
-				$where = "WHERE reference LIKE'%$text%' AND current_state = 9 ORDER BY reference";
-				break;
-			endswitch;
-		else :
-			$where = "WHERE (date_add BETWEEN '$from' AND '$to') AND current_state = 9 ORDER BY id_order DESC";
-		endif;
-?>		
-
-<?php
-$paginator = new paginator();
-if(isset($_POST['get_rows'])){$get_rows = $_POST['get_rows'];$paginator->setcookie_rows($get_rows);}else if(isset($_COOKIE['get_rows'])){$get_rows = $_COOKIE['get_rows'];}else{$get_rows = 50;}
-		$paginator->Per_Page("tbl_order",$where,$get_rows);
-		$paginator->display($get_rows,"index.php?content=order_closed");
-		$Page_Start = $paginator->Page_Start;
-		$Per_Page = $paginator->Per_Page;
+		
+	$where = "WHERE current_state = 9 ";
+	if( $ds['reference'] != '' )
+	{
+		$where .= "AND reference LIKE '%".$ds['reference']."%' ";	
+	}
+	
+	if( $ds['cusName'] != '' )
+	{
+		$cus_in 	= customer_in($ds['cusName']); //---- tools.php
+		$where .= $cus_in === FALSE ? '' : "AND id_customer IN(".$cus_in.") ";	
+	}
+	
+	if( $ds['empName'] != '' ) 
+	{
+		$emp_in = employee_in($ds['empName']); //---- tools.php
+		$where 	.= $emp_in === FALSE ? '' : "AND id_employee IN(".$emp_in.") ";
+	}
+	
+	if( $ds['fromDate'] != '' && $ds['toDate'] != '')
+	{
+		$from	= fromDate($ds['fromDate']);
+		$to	= toDate($ds['toDate']);
+		if( $os['sortDate'] == '0' )
+		{
+			$where .= "AND date_add >= '".$from."' AND date_add <= '".$to."' ";
+		}
+		else
+		{
+			$where .= "AND date_upd >= '".$from."' AND date_upd <= '".$to."' ";	
+		}
+	}
+	
+	if( $role_in != '')
+	{
+		$where .= "AND role IN(".$role_in.") ";	
+	}
+	$where .= "ORDER BY date_upd DESC ";
+	
+	$paginator = new paginator();
+	$get_rows = isset( $_POST['get_rows'] ) ? $_POST['get_rows'] : ( getCookie('get_rows') ? getCookie('get_rows') : 50 );
+	$paginator->setcookie_rows($get_rows);
+	$paginator->Per_Page('tbl_order', $where, $get_rows);
+	$paginator->display($get_rows, 'index.php?content=order_closed');
+	$Page_Start = $paginator->Page_Start;
+	$Per_Page = $paginator->Per_Page;
 ?>		
 <div class='row'>
 <div class='col-sm-12'>
-	<table class='table table-striped table-hover'>
-    	<thead style='color:#FFF; background-color:#48CFAD;'>
+	<table class='table table-striped table-bordered'>
+    	<thead style="font-size:12px;">
         	<th style='width:5%; text-align:center;'>ลำดับ</th>
-			<th style='width:10%;'>เลขที่อ้างอิง</th><th style='width:20%;'>ลูกค้า</th>
+			<th style='width:10%; text-align:center;'>เลขที่อ้างอิง</th>
+            <th style='width:20%; text-align:center;'>ลูกค้า</th>
             <th style='width:10%; text-align:center;'>ยอดเงิน</th>
 			<th style='width:15%; text-align:center;'>เงื่อนไข</th>
-			<th style='width:10%; text-align:center;'>สถานะ</th>
-			<th style='width:10%;'>พนักงาน</th>
-			<th style='width:10%; text-align:center;'>วันที่เพิ่ม</th>
-			<th style='width:10%; text-align:center;'>วันที่ปรับปรุง</th>
+			<th style='width:10%; text-align:center;'>พนักงาน</th>
+			<th style='width:15%; text-align:center;'>วันที่เอกสาร</th>
+			<th style='width:15%; text-align:center;'>วันที่ปรับปรุง</th>
         </thead>
-<?php        
-		$result = dbQuery("SELECT id_order,reference,date_add,date_upd,payment,id_customer,id_employee,current_state FROM tbl_order ".$where." LIMIT ".$paginator->Page_Start." , ".$paginator->Per_Page);
-		$i=0;
-		$n = 1;
-		$row = dbNumRows($result);
-		if($row>0) :
-			while($i<$row) :
-				list($id_order,$reference,$date_add,$date_upd,$payment,$id_customer,$id_employee,$current_state) = dbFetchArray($result);
-				list($amount) = dbFetchArray(dbQuery("SELECT SUM(total_amount) FROM tbl_order_detail WHERE id_order = '$id_order'"));
-				list($cus_first_name,$cus_last_name) = dbFetchArray(dbQuery("SELECT first_name,last_name FROM tbl_customer WHERE id_customer = '$id_customer'"));
-				list($em_first_name,$em_last_name) = dbFetchArray(dbQuery("SELECT first_name,last_name FROM tbl_employee WHERE id_employee = '$id_employee'"));
-				list($status) = dbFetchArray(dbQuery("SELECT state_name FROM tbl_order_state WHERE id_order_state = '$current_state'"));
-				$customer_name = "$cus_first_name $cus_last_name";
-				$employee_name = "$em_first_name $em_last_name";	
-?>			
+<?php  	$qs	= dbQuery("SELECT * FROM tbl_order " . $where . " LIMIT ". $paginator->Page_Start .", ". $paginator->Per_Page);	?>
+<?php 	$n 	= 1;		?>
+<?php	if(dbNumRows($qs) > 0) :	?>
+<?php		while( $rs = dbFetchObject($qs) ) :			?>
 			<tr style="font-size:12px;">
-				<td align='center' style='cursor:pointer;' onclick="viewOrder(<?php echo $id_order; ?>)"><?php echo $n; ?></td>
-				<td style='cursor:pointer;' onclick="viewOrder(<?php echo $id_order; ?>)"><?php echo $reference; ?></td>
-				<td style='cursor:pointer;' onclick="viewOrder(<?php echo $id_order; ?>)"><?php echo $customer_name; ?></td>
-				<td align='center' style='cursor:pointer;' onclick="viewOrder(<?php echo $id_order; ?>)"><?php echo number_format($amount); ?></td>
-				<td align='center' style='cursor:pointer;' onclick="viewOrder(<?php echo $id_order; ?>)"><?php echo $payment; ?></td>
-				<td align='center' style='cursor:pointer;' onclick="viewOrder(<?php echo $id_order; ?>)"><?php echo $status; ?></td>
-				<td style='cursor:pointer;' onclick="viewOrder(<?php echo $id_order; ?>)"><?php echo $employee_name; ?></td>
-				<td align='center' style='cursor:pointer;' onclick="viewOrder(<?php echo $id_order; ?>)"><?php echo thaiDate($date_add); ?></td>
-				<td align='center' style='cursor:pointer;' onclick="viewOrder(<?php echo $id_order; ?>)"><?php echo thaiDate($date_upd); ?></td>
-			</tr>
-<?php		$i++; $n++;  ?>
+            	<td align="center" class="pointer" onclick="viewOrder(<?php echo $rs->id_order; ?>)"><?php echo $n; ?></td>
+                <td align="center" class="pointer" onclick="viewOrder(<?php echo $rs->id_order; ?>)"><?php echo $rs->reference; ?></td>
+                <td align="center" class="pointer" onclick="viewOrder(<?php echo $rs->id_order; ?>)"><?php echo customer_name($rs->id_customer); ?></td>
+                <td align="center" class="pointer" onclick="viewOrder(<?php echo $rs->id_order; ?>)"><?php echo number_format(orderAmount($rs->id_order), 2); ?></td>
+                <td align="center" class="pointer" onclick="viewOrder(<?php echo $rs->id_order; ?>)"><?php echo $rs->payment; ?></td>
+                <td align="center" class="pointer" onclick="viewOrder(<?php echo $rs->id_order; ?>)"><?php echo employee_name($rs->id_employee); ?></td>
+                <td align="center" class="pointer" onclick="viewOrder(<?php echo $rs->id_order; ?>)"><?php echo thaiDateTime($rs->date_add); ?></td>
+                <td align="center" class="pointer" onclick="viewOrder(<?php echo $rs->id_order; ?>)"><?php echo thaiDateTime($rs->date_upd); ?></td>
+            </tr>
+<?php	$n++;  ?>
 <?php 	endwhile; ?>		
-<?php elseif($row==0) :  ?>
-			<tr><td colspan='9' align='center'><h3>-----------------  ไม่มีรายการในช่วงนี้  -----------------</h3></td></tr>
 <?php endif; ?>
 	</table>
 <?php	echo $paginator->display_pages(); ?>
@@ -539,6 +472,39 @@ if(isset($_POST['get_rows'])){$get_rows = $_POST['get_rows'];$paginator->setcook
 	</div>
     
 <script>
+function toggleDate(type)
+{
+	if( type == 'dateAdd')
+	{
+		$("#sortDate").val(0);
+		$("#btn-dateUpd").removeClass('btn-primary');
+		$("#btn-dateAdd").addClass('btn-primary');
+	}else{
+		$("#sortDate").val(1);
+		$("#btn-dateAdd").removeClass('btn-primary');
+		$("#btn-dateUpd").addClass('btn-primary');
+	}
+	getSearch();
+}
+
+
+function toggleOrderType(type, id)
+{
+	if( $("#"+type).val() == 0 ){
+		$("#"+type).val(id);
+		$("#btn-"+type).addClass("btn-primary");
+	}else{
+		$("#"+type).val(0);
+		$("#btn-"+type).removeClass("btn-primary");
+	}
+	getSearch();
+}
+
+$(".filter").keyup(function(e) {
+    if( e.keyCode == 13 ){
+		getSearch();
+	}
+});
 
 function viewOrder(id_order)
 {
@@ -645,30 +611,42 @@ function noSender()
 $("#from_date").datepicker({
      dateFormat: 'dd-mm-yy', onClose: function( selectedDate ) {
        $( "#to_date" ).datepicker( "option", "minDate", selectedDate );
+	   if( $(this).val() !== "" && $("#to_date").val() == ""){
+		   $("#to_date").focus();
+	   }else if( $(this).val() !== "" && $("#to_date").val() !== ""){
+		   getSearch();
+	   }
      }
  });
 $( "#to_date" ).datepicker({
       dateFormat: 'dd-mm-yy',   onClose: function( selectedDate ) {
         $( "#from_date" ).datepicker( "option", "maxDate", selectedDate );
+		if( $(this).val() !== "" && $("#from_date").val() !== "" ){
+			getSearch();
+		}
       }
  });
 
-$("#search-btn").click(function(e){
-	load_in();
+function getSearch()
+{
 	var from = $("#from_date").val();
-	var to		= $("#to_date").val();
-	if(from != "" || to !="")
+	var to 	= $("#to_date").val();
+	if( (from !== "" || to !== "" ) && ( isDate(from) == false || isDate(to) == false ) )
 	{
-		if(!isDate(from) || !isDate(to) )
-		{
-			load_out();
-			swal("รูปแบบวันที่ไม่ถูกต้อง");
-			return false;
-		}else{
-			$("#form").submit();
-		}
-	}else{
-		$("#form").submit();
+		swal("วันที่ไม่ถูกต้อง");
+		return false;	
 	}
-});
+	$("#form").submit();
+}
+
+function clearFilter()
+{
+	$.ajax({
+		url:"controller/billController.php?clear_filter",
+		type:"GET", cache:"false", success: function(rs){
+			window.location.href = "index.php?content=order_closed";
+		}
+	});
+}
+
 </script>

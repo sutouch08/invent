@@ -326,6 +326,10 @@ switch($page){
 			$content = "report/support_summary.php";
 			$pageTitle = "รายงานสรุป ยอดเบิกอภินันทนาการ";
 			break;	
+		case "support_product_deep_analyz" :
+			$content = "report/support_product_deep_analyz.php";
+			$pageTitle = "รายงานวิเคราะห์อภินันท์แบบละเอียด";
+			break;			
 	//*****  รายงานตรวจสอบ  *****//
 		case "discount_edit":
 			$content = "report/discount_edit_report.php";

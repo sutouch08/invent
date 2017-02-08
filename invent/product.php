@@ -245,6 +245,7 @@
                                 <th style="width:8%; text-align:center;">อื่นๆ</th>
                                 <th style="width:5%; text-align:center;">ทุน</th>
                                 <th style="width:5%; text-align:center;">ขาย</th>
+                                <th style="width:5%; text-align:center;">สถานะ</th> 
                                 <th></th>
                             </tr>
                         </thead>
@@ -281,6 +282,7 @@
                                 <td align="center" class="middle"><?php echo get_attribute_name($rs['id_attribute']); ?></td>
                                 <td align="center" class="middle"><?php echo number_format($rs['cost'], 2); ?></td>
                                 <td align="center" class="middle"><?php echo number_format($rs['price'], 2); ?></td>
+                                <td align="center" class="middle"><a href="javascript:void(0)" id="active_<?php echo $id_pa; ?>" onclick="toggleActiveItem(<?php echo $id_pa; ?>)"><?php echo isActived($rs['active']); ?></a></td>
                                 <td align="right" class="middle">
                                 	<button type="button" class="btn btn-xs btn-warning" onClick="getEdit(<?php echo $id_pa; ?>)"><i class="fa fa-pencil"></i></button>
                                     <button type="button" class="btn btn-xs btn-danger" onClick="getDelete(<?php echo $id_pa; ?>)"><i class="fa fa-trash"></i></button>                                
@@ -510,6 +512,21 @@
 {{/each}}
 </script>
 <script>
+function toggleActiveItem(id_pa)
+{
+	$.ajax({
+		url: 'controller/productController.php?toggleActiveItem',
+		type:'POST', cache:'false', data:{"id_pa" : id_pa },
+		success: function(rs){
+			rs = $.trim(rs);
+			if( rs == '1' ){
+				$("#active_"+id_pa).html('<i class="fa fa-check" style="color:green"></i>');
+			}else{
+				$("#active_"+id_pa).html('<i class="fa fa-remove" style="color:red"></i>');	
+			}
+		}
+	});
+}
 $(document).ready(function(e) {
    setColorbox();
 });

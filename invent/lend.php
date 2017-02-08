@@ -11,6 +11,7 @@
 	if( $ps['add'] || $ps['edit'] ){ $return = 1; }else{ $return = 0; }
 	accessDeny($view);
 	include("function/lend_helper.php");
+	include("function/order_helper.php");
 	?>
 
 
@@ -99,84 +100,26 @@ else
 </div>
 </div>
 <hr style="margin-top:10px;"/>
-<!-----------------------------------------  เริ่ม ORDER GRID ---------------------------------->
+<!----------------------------------------- Category Menu ---------------------------------->
 <div class='row'>
-	<div class='col-lg-12 col-md-12 col-sm-12 col-sx-12'>
-		<ul class='nav nav-tabs' role='tablist' style='background-color:#EEE'>
-<?php    
-				$sql = dbQuery("SELECT id_category, category_name FROM tbl_category WHERE parent_id = 0 AND level_depth = 1 ORDER BY position ASC");
-				$row = dbNumRows($sql);
-				$i=0;
-				while($i<$row) :
-					list($id_category, $category_name) = dbFetchArray($sql);
-					$sqr = dbQuery("SELECT id_category, category_name FROM tbl_category WHERE parent_id = ".$id_category." ORDER BY position ASC");
-					$rs = dbNumRows($sqr);
-					$n=0;
-					if($rs<1) :
-						echo"<li calss=''><a href='#cat-$id_category' role='tab' data-toggle='tab'>$category_name</a>";
-					else :		
-						echo"<li class='dropdown'><a id='ul-$id_category' class='dropdown-toggle' data-toggle='dropdown' href='#'>$category_name<span class='caret'></span></a>";
-						echo"<ul class='dropdown-menu' role='menu' aria-labelledby='ul-$id_category'>";
-						echo"<li class=''><a href='#cat-$id_category' tabindex='-1' role='tab' data-toggle='tab'>$category_name</a></li>";     
-						while($n<$rs) :
-							list($id_sub_category, $sub_category_name) = dbFetchArray($sqr);
-							echo" <li class=''><a href='#cat-$id_sub_category' tabindex='-1' role='tab' data-toggle='tab'>$sub_category_name</a></li>";
-							$n++;
-						endwhile;
-						echo"</ul></li>";
-					endif;
-					echo "</li>";
-					$i++;
-				endwhile;
-?>
+	<div class='col-sm-12'>
+		<ul class='nav navbar-nav' role='tablist' style='background-color:#EEE'>
+		<?php echo categoryTabMenu('order'); ?>
 		</ul>
+	</div><!---/ col-sm-12 ---->
+</div><!---/ row -->
+<hr style='border-color:#CCC; margin-top: 0px; margin-bottom:0px;' />
+<div class='row'>
+	<div class='col-sm-12'>		
+		<div class='tab-content' style="min-height:1px; padding:0px;">
+		<?php echo getCategoryTab(); ?>
+		</div>
 	</div>
 </div>
-<div class='row'>
-	<div class='col-lg-12 col-md-12 col-sm-12 col-sx-12'>
-		<hr style='border-color:#CCC; margin-top: 0px; margin-bottom:15px;' />	
-		<div class='tab-content'>
-<?php
-	$query = dbQuery("SELECT id_category, category_name FROM tbl_category WHERE id_category !=0");
-	$rc = dbNumRows($query);
-	$r =0;
-	while($c = dbFetchArray($query)) : 
-		$id_category = $c['id_category'];
-		$cate_name = $c['category_name'];
-		echo"<div class='tab-pane"; if($r==0){ echo" active";} echo"' id='cat-$id_category'>";	
-		$sql = dbQuery("SELECT tbl_category_product.id_product FROM tbl_category_product LEFT JOIN tbl_product ON tbl_category_product.id_product = tbl_product.id_product WHERE id_category = $id_category AND tbl_product.active = 1 ORDER BY product_code ASC");
-		$row = dbNumRows($sql); 
-		if($row>0) :
-			$i=0;
-			while($i<$row) :
-				list($id_product) = dbFetchArray($sql);
-				$product = new product();
-				$product->product_detail($id_product);
-?>				
-		<div class='col-lg-1 col-md-1 col-sm-3 col-xs-4' style='text-align:center;'>
-			<div class='product' style='padding:5px;'>
-                <div class='image' style="min-height:50px;">
-                    <a href='javascript:void(0)' onclick='getData(<?php echo $product->id_product; ?>)'>
-                        <?php echo $product->getCoverImage($product->id_product,1,"img-responsive"); ?>
-                    </a>
-                </div>
-				<div class='description' style='font-size:10px; height:50px;'>
-                	<a href='javascript:void(0)'  onclick='getData(<?php echo $product->id_product; ?>)'>
-						<?php echo $product->product_code. "<br/>".$product->product_price; ?> : <span style='color:red'> <?php echo $product->available_product_qty($id_product); ?></span>
-					</a>
-                </div>
-			</div>
-          </div>
-<?php	$i++; ?>
-<?php 	endwhile; ?>
-<?php else : ?>
-		<h4 style='text-align:center; margin-top:30px;'>ยังไม่มีรายการสินค้า</h4>
-<?php endif; ?>
-		<?php $r++;  ?>
-		</div>
-<?php endwhile; ?>
-</div>
-</div></div>
+<!------------------------------------ End Category Menu ------------------------------------>	
+
+<!-----------------------------------------  เริ่ม ORDER GRID ---------------------------------->
+
 <hr/>
 <div class="row">
 <div class="col-sm-12">
@@ -676,6 +619,30 @@ else
 
 
 </div><!--- container --->
+<script>
+	function expandCategory(el)
+	{
+		var className = 'open';
+		if (el.classList)
+		{
+    		el.classList.add(className)
+		}else if (!hasClass(el, className)){
+			el.className += " " + className
+		}
+	}
+
+	function collapseCategory(el)
+	{
+		var className = 'open';
+		if (el.classList)
+		{
+			el.classList.remove(className)
+		}else if (hasClass(el, className)) {
+			var reg = new RegExp('(\\s|^)' + className + '(\\s|$)')
+			el.className=el.className.replace(reg, ' ')
+  		}
+	}
+</script>
 
 <script>
 function total_lend_qty()
@@ -1223,6 +1190,31 @@ function printLend()
 	var center = ($(document).width() - 800) /2;
 	window.open("controller/lendController.php?print_lend&id_order="+id_order, "_blank", "width=800, height=900. left="+center+", scrollbars=yes");
 	
+}
+
+//--------------------------------  โหลดรายการสินค้าสำหรับจิ้มสั่งสินค้า  -----------------------------//
+function getCategory(id) {
+    var output = $("#cat-" + id);
+    if (output.html() == '') {
+        load_in();
+        $.ajax({
+            url: "controller/orderController.php?getCategoryProductGrid",
+            type: "POST",
+            cache: "false",
+            data: { "id_category": id },
+            success: function(rs) {
+                load_out();
+                var rs = $.trim(rs);
+                if (rs != 'no_product') {
+                    output.html(rs);
+                } else {
+                    output.html('<center><h4>ไม่พบสินค้าในหมวดหมู่ที่เลือก</h4></center>');
+                    $('.tab-pane').removeClass('active');
+                    output.addClass('active');
+                }
+            }
+        });
+    }
 }
 </script>
 

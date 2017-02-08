@@ -32,6 +32,14 @@ if( isset( $_GET['stock_by_zone'] ) && isset( $_GET['export'] ) )
 	include 'export/exportStockZone.php';
 }
 
+
+//------------------------------- Print  -------------------------------//
+
+if( isset( $_GET['reportStockBalance'] ) && isset( $_GET['print'] ) )
+{
+	include 'print/printStockBalance.php';	
+}
+
 if( isset( $_GET['stock_by_zone'] ) && isset( $_GET['export_csv'] ) )
 {
 	$p_rank 		= $_GET['product_rank'];

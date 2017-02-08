@@ -475,11 +475,12 @@ if(isset($_GET['repay'])){
 
 if(isset($_GET['clear_filter']))
 {
-	setcookie("order_from_date","",time()-3600,"/");
-	setcookie("order_to_date","",time()-3600,"/");
-	setcookie("order_search-text", $text, time() - 3600, "/");
-	setcookie("order_filter",$filter, time() - 3600,"/");
-	header("location: ../index.php?content=order_closed");
+	$cookie = array("fromDate", "toDate", "reference", "cusName", "empName", "order", "consign", "sponsor", "support", "reform", "sortDate");
+	foreach($cookie as $name)
+	{
+		deleteCookie($name);
+	}
+	echo 'success';
 }
 
 ?>

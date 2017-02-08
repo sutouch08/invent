@@ -154,6 +154,8 @@
                              <li><a href="index.php?content=sponsor_summary">			<i class="fa fa-bar-chart"></i>&nbsp; รายงานสรุป ยอดสปอนเซอร์ (ให้บุคคลภายนอก)</a></li>
                             <li><a href="index.php?content=support_by_employee">		<i class="fa fa-bar-chart"></i>&nbsp; รายงาน ยอดเบิกอภินันทนาการ (สำหรับพนักงาน) </a></li>
                             <li><a href="index.php?content=support_summary">			<i class="fa fa-bar-chart"></i>&nbsp; รายงานสรุป ยอดเบิกอภินันทนาการ (สำหรับพนักงาน) </a></li>
+                            <li class="divider"></li>
+                            <li><a href="index.php?content=support_product_deep_analyz"><i class="fa fa-bar-chart"></i>&nbsp;รายงานวิเคราะห์อภินันท์แบบละเอียด</a></li>
                             
                  			
                         </ul>

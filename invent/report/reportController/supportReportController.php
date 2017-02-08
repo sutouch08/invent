@@ -1,7 +1,7 @@
 <?php
 require "../../../library/config.php";
 require "../../../library/functions.php";
-//require "../../../library/class/php-excel.class.php";
+require "../../../library/class/php-excel.class.php";
 require "../../function/tools.php";
 require "../../function/support_helper.php";
 require "../../function/report_helper.php";
@@ -151,6 +151,8 @@ if(isset($_GET['export_support_by_employee']) && isset($_GET['view']) )
 	$Excel->addArray($excel);
 	$Excel->generateXML('Support_by_Employee');
 }
+
+
 
 if(isset($_GET['get_support_detail']) && isset($_GET['id_order']) )
 {

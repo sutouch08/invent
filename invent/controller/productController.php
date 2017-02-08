@@ -437,6 +437,19 @@ if( isset( $_GET['clearFilter'] ) )
 
 
 //----------------  Toggle Active  -----------------//
+if( isset( $_GET['toggleActiveItem'] ) )
+{
+	$active = 1;
+	$id_pa = $_POST['id_pa'];
+	$qs = dbQuery("SELECT active FROM tbl_product_attribute WHERE id_product_attribute = ".$id_pa);
+	if( dbNumRows($qs) == 1 )
+	{
+		list( $rs ) = dbFetchArray($qs);
+		$active = $rs == 1 ? 0 : 1;
+		$qs = dbQuery("UPDATE tbl_product_attribute SET active = ".$active." WHERE id_product_attribute = ".$id_pa);
+	}
+	echo $active;
+}
 if( isset( $_GET['setActive'] ) )
 {
 	$sc 		= 'fail';
