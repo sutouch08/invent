@@ -399,6 +399,8 @@ function reloadOrderProduct(id_order) {
 //--------------------------------  โหลดรายการสินค้าสำหรับจิ้มสั่งสินค้า  -----------------------------//
 function getCategory(id) {
     var output = $("#cat-" + id);
+	$('.tab-pane').removeClass('active');
+	$(".menu").removeClass("active");
     if (output.html() == '') {
         load_in();
         $.ajax({
@@ -419,12 +421,15 @@ function getCategory(id) {
             }
         });
     }
+	output.addClass('active');
 }
 
 
 //--------------------------------  โหลดรายการสินค้าสำหรับดูยอดคงเหลือ  -----------------------------//
 function getViewCategory(id) {
     var output = $("#cat-" + id);
+	$('.tab-pane').removeClass('active');
+	$(".menu").removeClass("active");
     if (output.html() == '') {
         load_in();
         $.ajax({
@@ -438,15 +443,13 @@ function getViewCategory(id) {
                 if (rs != 'no_product') {
                     output.html(rs);
                 } else {
-
                     output.html('<center><h4>ไม่พบสินค้าในหมวดหมู่ที่เลือก</h4></center>');
-                    $('.tab-pane').removeClass('active');
-                    output.addClass('active');
-                    //swal("ไม่พบข้อมูล", "ไม่พบข้อมูลสินค้าในหมวดหมู่ที่เลือก", "warning");		
                 }
             }
         });
     }
+	
+	output.addClass('active');
 }
 
 //----------------------------  โหลดตารางใส่จำนวนสั่งซื้อของสินค้า  --------------------//

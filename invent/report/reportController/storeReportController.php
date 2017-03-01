@@ -573,7 +573,8 @@ if( isset($_GET['received_by_document']) && isset($_GET['report']) )
 							"po"			=> $rs['po_reference'],
 							"id_po"		=> $rs['id_po'],
 							"invoice"		=> $rs['invoice'],
-							"qty"			=> $re->total_qty($rs['id_receive_product']),
+							"qty"			=> number_format($re->total_qty($rs['id_receive_product'])),
+							"amount"		=> number_format($re->total_amount($rs['id_receive_product']), 2),
 							"employee"	=> employee_name($rs['id_employee']),
 							"remark"		=> $rs['remark']
 							);
@@ -614,7 +615,7 @@ if( isset($_GET['received_by_document']) && isset($_GET['export']) )
 	$arr = array("ช่วงเอกสาร : ".$doc_range."    วันที่  ". thaiDate($from). "   ถึงวันที่ ". thaiDate($to));
 	array_push($data, $arr);
 	
-	$arr = array("ลำดับ", "วันที่", "เลขที่เอกสาร", "ใบสั่งซื้อ", "ใบส่งสินค้า", "จำนวนรวม", "พนักงาน","หมายเหตุ");
+	$arr = array("ลำดับ", "วันที่", "เลขที่เอกสาร", "ใบสั่งซื้อ", "ใบส่งสินค้า", "จำนวนรวม", "มูลค่า", "พนักงาน","หมายเหตุ");
 	array_push($data, $arr);
 	
 	if( dbNumRows($qs) > 0 )
@@ -623,7 +624,7 @@ if( isset($_GET['received_by_document']) && isset($_GET['export']) )
 		while($rs = dbFetchArray($qs) )
 		{
 			$re = new receive_product();
-			$arr = array($n, thaiDate($rs['date_add']), $rs['reference'], $rs['po_reference'], $rs['invoice'], $re->total_qty($rs['id_receive_product']), employee_name($rs['id_employee']), $rs['remark']);
+			$arr = array($n, thaiDate($rs['date_add']), $rs['reference'], $rs['po_reference'], $rs['invoice'], $re->total_qty($rs['id_receive_product']), $re->total_amount($rs['id_receive_product']), employee_name($rs['id_employee']), $rs['remark']);
 			array_push($data, $arr);
 		}	
 	}

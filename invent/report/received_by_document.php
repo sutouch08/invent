@@ -59,6 +59,7 @@
 		<th style="width:15%;">ใบสั่งซื้อ</th>
 		<th style="width:15%;">ใบส่งสินค้า</th>
         <th style="width:10%; text-align:right">จำนวน</th>
+		<th style="width:10%; text-align:right;">มูลค่า</th>
 		<th style="width:20%;">พนักงาน</th>
 		<th>หมายเหตุ</th>
     </thead>
@@ -66,12 +67,13 @@
 	{{#if nocontent}}
 		<tr><td colspan="5"><center><h4>{{ nocontent }}</h4></center></td></tr>
 	{{else}}
-	<tr>
+	<tr style="font-size:12px;">
 		<td>{{ date }}</td>
 		<td><a href="javascript:void(0)" onclick="received_detail({{ id }})">{{ reference }}</a></td>
 		<td><a href="javascript:void(0)" onclick="po_detail({{ id_po }})">{{ po }}</a></td>
 		<td>{{ invoice }}</td>
 		<td align="right">{{ qty }}</td>
+		<td align="right">{{ amount }}</td>
 		<td>{{ employee }}</td>
 		<td>{{ remark }}</td>
 	</tr>

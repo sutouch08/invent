@@ -219,12 +219,26 @@ public function change_item_status($id, $status)
 public function total_qty($id)
 {
 	$qty = 0;
-	$qs = dbQuery("SELECT SUM(qty) AS qty FROM tbl_receive_product_detail WHERE id_receive_product = ".$id);
+	$qs = dbQuery("SELECT SUM(qty) AS qty FROM tbl_receive_product_detail WHERE status = 1 AND id_receive_product = ".$id);
 	if(dbNumRows($qs) == 1 )
 	{ 
 		list($qty)	= dbFetchArray($qs);
 	}
 	return $qty;
+}
+
+public function total_amount($id)
+{
+	$sc = 0;
+	$qs = dbQuery("SELECT tbl_receive_product_detail.qty, tbl_product_attribute.cost FROM tbl_receive_product_detail JOIN tbl_product_attribute ON tbl_receive_product_detail.id_product_attribute = tbl_product_attribute.id_product_attribute WHERE tbl_receive_product_detail.status = 1 AND id_receive_product = ".$id);
+	if( dbNumRows($qs) > 0 )
+	{
+		while( $rs = dbFetchObject($qs) )
+		{
+			$sc += ($rs->qty * $rs->cost);	
+		}
+	}
+	return $sc;
 }
 
 

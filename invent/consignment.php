@@ -262,7 +262,12 @@ if( isset( $_GET['add'] ) ) :
                 <td style='width:40%; padding-right:10px;'>
                 <?php if( $edit ) : ?>
                         <select name='order_state' id='order_state' class='form-control input-sm'>
-                        <?php echo orderStateList($id_order); ?>
+                        	<option value="0">---- สถานะ ----</option>
+                            <option value="1">รอการชำระเงิน</option>
+                            <option value="3">รอจัดสินค้า</option>
+					<?php if( $delete == 1 ) : ?>
+                    		<option value="8">ยกเลิก</option>
+                    <?php endif; ?>                           
                         </select>
                     <?php endif; ?>
                     </td>

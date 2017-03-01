@@ -4,6 +4,7 @@ require "../../../library/functions.php";
 require "../../function/tools.php";
 require "../../function/report_helper.php";
 require "../../function/order_helper.php";
+include "../../function/address_helper.php";
 
 if( isset( $_GET['getItemBacklogs'] ) )
 {
@@ -220,4 +221,201 @@ if( isset( $_GET['getOrderBacklogs'] ) )
 	$sc = json_encode($ds);		
 	echo $sc;
 }
+
+if( isset( $_GET['orderMoniter'] ) && isset( $_GET['no_group'] ) )
+{
+	$sc = array();
+	//print_r($_POST);
+	$s_ref	= $_POST['s_ref'];
+	$s_cus	= $_POST['s_cus'] == "" ? "" : customer_in($_POST['s_cus']);
+	$s_emp	= $_POST['s_emp'] == "" ? "" : employee_in($_POST['s_emp']);
+	$fromDate = $_POST['from_date'] == "" ? "" : dbDate($_POST['from_date']);
+	$toDate	= $_POST['to_date'] == "" ? "" : dbDate($_POST['to_date']);
+	$fhour	= $_POST['fhour'];
+	$thour	= $_POST['thour'];
+	$timeState = $_POST['timeState'];
+
+	//----- Payment
+	$payment	= "";
+	$payment	.= $_POST['online'] == "" ? "" : "'ออนไลน์',";
+	$payment 	.= $_POST['credit'] == "" ? "" : "'เครดิต',";
+	$payment	.= $_POST['cash'] == "" ? "" : "'เงินสด',";
+	$payment	.= $_POST['consign'] == "" ? "" : "'ฝากขาย',";
+	$payment	.= $_POST['support'] == "" ? "" : "'เบิกอภินันท์',";
+	$payment 	.= $_POST['sponsor'] == "" ? "" : "'สปอนเซอร์สโมสร',";
+	$payment	.= $_POST['transform'] == "" ? "" : "''";
+	$payment	= trim($payment, ",");
+	
+	//----- State
+	$state 	= "";
+	$state 	.= $_POST['state_1'] == "" ? "" : '1,';
+	$state 	.= $_POST['state_3'] == "" ? "" : '3,';
+	$state 	.= $_POST['state_4'] == "" ? "" : '4,';
+	$state 	.= $_POST['state_5'] == "" ? "" : '5,';
+	$state 	.= $_POST['state_11'] == "" ? "" : "11,";
+	$state 	.= $_POST['state_10'] == "" ? "" : '10,';
+	$state	= trim($state, ",");
+	
+	$where = "WHERE current_state NOT IN(9,8) AND order_status = 1 AND valid != 2 ";
+	$where .= $payment == "" ? "" : "AND payment IN(".$payment.") ";
+	$where .= $state == "" ? "" : "AND current_state IN(".$state.") ";
+	$where .= $s_ref == "" ? "" : "AND reference LIKE '%".$s_ref."%' ";
+	$where .= ($s_cus == "" OR $s_cus === FALSE )? "" : "AND id_customer IN(".$s_cus.") ";
+	$where .= ($s_emp == "" OR $s_emp === FALSE ) ? "" : "AND id_employee IN(".$s_emp.") ";
+	
+	$no = 1;
+	
+	while( $toDate >= $fromDate )
+	{
+		if( $timeState != "" )
+		{
+			$qr = "SELECT tbl_order.* FROM tbl_order JOIN tbl_order_state_change ON tbl_order.id_order = tbl_order_state_change.id_order ";
+			$q_state = "AND tbl_order_state_change.id_order_state = ".$timeState." ";
+			$q_time = $fromDate != "" && $toDate != "" ? "AND tbl_order_state_change.date_add >= '".$fromDate." ".$fhour.":00' AND tbl_order_state_change.date_add <= '".$fromDate." ".$thour.":00' " : "";
+		}
+		else
+		{
+			$qr = "SELECT * FROM tbl_order ";	
+			$q_state = "";
+			$q_time = $fromDate != "" && $toDate != "" ? "AND date_add >= '".fromDate($fromDate)."' AND date_add <= '".toDate($fromDate)."' " : "";
+		}
+		
+		$qs = dbQuery($qr . $where . $q_state . $q_time );
+		if( dbNumRows($qs) > 0 )
+		{	
+			while( $rs = dbFetchObject($qs) )
+			{
+				$arr = array(
+									"no" => $no,
+									"reference"	=> $rs->reference,
+									"customer"	=> customer_name($rs->id_customer),
+									"province"	=> customerProvince($rs->id_customer),
+									"employee"	=> employee_name($rs->id_employee),
+									"amount"		=> number_format(orderAmount($rs->id_order), 2),
+									"payment"	=> $rs->payment,
+									"state"		=> stateLabel($rs->current_state),
+									"date_add"	=> thaiDate($rs->date_add, "/"),
+									"date_upd"	=> thaiDate($rs->date_upd, "/")
+									);
+				array_push($sc, $arr);
+				$no++;									
+			}
+		}	
+		$fromDate = date("Y-m-d", strtotime("+1 day", strtotime($fromDate)));	
+	}
+	echo count($sc) > 0 ? json_encode($sc) : json_encode(array("no" => 0));
+}
+
+if( isset( $_GET['orderMoniter'] ) && isset( $_GET['group_by_customer'] ) )
+{
+	$sc = array();
+	//print_r($_POST);
+	$s_ref	= $_POST['s_ref'];
+	$s_cus	= $_POST['s_cus'] == "" ? "" : customer_in($_POST['s_cus']);
+	$s_emp	= $_POST['s_emp'] == "" ? "" : employee_in($_POST['s_emp']);
+	$fromDate = $_POST['from_date'] == "" ? "" : dbDate($_POST['from_date']);
+	$toDate	= $_POST['to_date'] == "" ? "" : dbDate($_POST['to_date']);
+	$fhour	= $_POST['fhour'];
+	$thour	= $_POST['thour'];
+	$timeState = $_POST['timeState'];
+	$customer = "";
+
+	//----- Payment
+	$payment	= "";
+	$payment	.= $_POST['online'] == "" ? "" : "'ออนไลน์',";
+	$payment 	.= $_POST['credit'] == "" ? "" : "'เครดิต',";
+	$payment	.= $_POST['cash'] == "" ? "" : "'เงินสด',";
+	$payment	.= $_POST['consign'] == "" ? "" : "'ฝากขาย',";
+	$payment	.= $_POST['support'] == "" ? "" : "'เบิกอภินันท์',";
+	$payment 	.= $_POST['sponsor'] == "" ? "" : "'สปอนเซอร์สโมสร',";
+	$payment	.= $_POST['transform'] == "" ? "" : "''";
+	$payment	= trim($payment, ",");
+	
+	//----- State
+	$state 	= "";
+	$state 	.= $_POST['state_1'] == "" ? "" : '1,';
+	$state 	.= $_POST['state_3'] == "" ? "" : '3,';
+	$state 	.= $_POST['state_4'] == "" ? "" : '4,';
+	$state 	.= $_POST['state_5'] == "" ? "" : '5,';
+	$state 	.= $_POST['state_11'] == "" ? "" : "11,";
+	$state 	.= $_POST['state_10'] == "" ? "" : '10,';
+	$state	= trim($state, ",");
+	
+	$where = "WHERE current_state NOT IN(9,8) AND order_status = 1 AND valid != 2 ";
+	$where .= $payment == "" ? "" : "AND payment IN(".$payment.") ";
+	$where .= $state == "" ? "" : "AND current_state IN(".$state.") ";
+	$where .= $s_ref == "" ? "" : "AND reference LIKE '%".$s_ref."%' ";
+	$where .= ($s_cus == "" OR $s_cus === FALSE )? "" : "AND id_customer IN(".$s_cus.") ";
+	$where .= ($s_emp == "" OR $s_emp === FALSE ) ? "" : "AND id_employee IN(".$s_emp.") ";
+		
+	if( $fromDate != "" && $toDate != "" )
+	{
+		$qc = dbQuery("SELECT id_customer FROM tbl_order ".$where."AND date_add >= '".fromDate($fromDate)."' AND date_add <= '".toDate($toDate)."' GROUP BY id_customer");
+	}
+	else
+	{
+		$qc = dbQuery("SELECT id_customer FROM tbl_order ".$where."GROUP BY id_customer");
+	}
+	
+	if( dbNumRows($qc) > 0 )
+	{
+		while( $rd = dbFetchObject( $qc ) )
+		{
+			$from = $fromDate;
+			$to 	= $toDate;
+			while($to >= $from)
+			{
+						if( $timeState != "" )
+						{
+							$qr = "SELECT tbl_order.* FROM tbl_order JOIN tbl_order_state_change ON tbl_order.id_order = tbl_order_state_change.id_order ";
+							$q_state = "AND tbl_order_state_change.id_order_state = ".$timeState." ";
+							$q_cus	= "AND id_customer = ".$rd->id_customer." ";
+							$q_time = ($from != "" && $to != "") ? "AND tbl_order_state_change.date_add >= '".$from." ".$fhour.":00' AND tbl_order_state_change.date_add <= '".$from." ".$thour.":00' " : "";
+						}
+						else
+						{
+							$qr = "SELECT * FROM tbl_order ";	
+							$q_state = "";
+							$q_cus	= "AND id_customer = ".$rd->id_customer." ";
+							$q_time = ($from != "" && $to != "") ? "AND date_add >= '".fromDate($from)."' AND date_add <= '".toDate($from)."' " : "";
+						}
+				
+						$qs = dbQuery($qr . $where . $q_state . $q_cus . $q_time );
+						$rows = dbNumRows($qs);
+						if( $rows > 0 )
+						{	
+							$no = 1;
+							$ds = array();
+										while( $rs = dbFetchObject($qs) )
+										{
+											$arr = array(
+																"no" => $no,
+																"reference"	=> $rs->reference,
+																"customer"	=> customer_name($rs->id_customer),
+																"employee"	=> employee_name($rs->id_employee),
+																"amount"		=> number_format(orderAmount($rs->id_order), 2),
+																"payment"	=> $rs->payment,
+																"state"		=> stateLabel($rs->current_state),
+																"date_add"	=> thaiDate($rs->date_add, "/"),
+																"date_upd"	=> thaiDate($rs->date_upd, "/")
+																);
+											array_push($ds, $arr);
+											$no++;						
+										}//--- endwhile
+							$arr = array(
+												"customer_id"		=> $rd->id_customer,
+												"customer_name"	=> customer_name($rd->id_customer),
+												"province"			=> customerProvince($rd->id_customer),
+												"total_order"			=> $rows,
+												"order"				=> $ds
+												);
+							array_push($sc, $arr);					
+						}//-- endif
+						$from = date("Y-m-d", strtotime("+1 day", strtotime($from)));		
+			}//-- endwhile
+		}//-- endif
+	}//-- endif	
+	echo json_encode($sc);
+}
+
 ?>

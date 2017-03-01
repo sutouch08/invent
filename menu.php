@@ -47,7 +47,8 @@
                 <li><a href="index.php?content=bill"><i class="fa fa-file-text-o"></i>&nbsp; ออเดอร์รอเปิดบิล</a></li>
                 <li><a href="index.php?content=order_closed"><i class="fa fa-file-text-o"></i>&nbsp; ออเดอร์เปิดบิลแล้ว</a></li>
                  <li class="divider"></li>
-                 <li><a href="index.php?content=request"><i class="fa fa-thumb-tack"></i>&nbsp; ร้องขอสินค้า</a></li>
+                 <!-- <li><a href="index.php?content=request"><i class="fa fa-thumb-tack"></i>&nbsp; ร้องขอสินค้า</a></li> -->
+                 <li><a href="index.php?content=order_monitor"><i class="fa fa-exclamation-triangle"></i>&nbsp; ตรวจสอบออเดอร์</a></li>
               </ul>
             </li>
 

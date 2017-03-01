@@ -21,7 +21,6 @@ function getOrderStateInTime($state, $from, $to) //--- กรองวันท�
 function selectStateTime($state)
 {
 	$states = array(
-					'1'	=> 'รอชำระเงิน', //-- รอชำระเงิน
 					'3'	=> 'รอจัดสินค้า', //-- รอจัดสินค้า
 					'4'	=> 'กำลังจัดสินค้า', //-- กำลังจัดสินค้า
 					'5'	=> 'รอตรวจสินค้า', //-- รอตรวจสินค้า
@@ -125,9 +124,11 @@ function categoryTabMenu($mode = 'order')
 		}
 		else
 		{
-			$sc .= '<li class=""><a href="#cat-'.$rs->id_category.'" role="tab" data-toggle="tab" onClick="'.$ajax.'('.$rs->id_category.')">'.$rs->category_name.'</a></li>';
+			$sc .= '<li class="menu"><a href="#cat-'.$rs->id_category.'" role="tab" data-toggle="tab" onClick="'.$ajax.'('.$rs->id_category.')">'.$rs->category_name.'</a></li>';
 		}
-		$sc .= '<script>
+		
+	}
+	$sc .= '<script>
 						function expandCategory(el)
 						{
 							var className = "open";
@@ -150,8 +151,63 @@ function categoryTabMenu($mode = 'order')
 								el.className=el.className.replace(reg, " ")
 							}
 						}
-					</script>';
-	}
+						
+						//--------------------------------  โหลดรายการสินค้าสำหรับดูยอดคงเหลือ  -----------------------------//
+					function getViewCategory(id) 
+					{
+						var output = $("#cat-" + id);
+						$(".tab-pane").removeClass("active");
+						$(".menu").removeClass("active");
+						if (output.html() == "") {
+							load_in();
+							$.ajax({
+								url: "controller/orderController.php?getCategoryGrid",
+								type: "POST",
+								cache: "false",
+								data: { "id_category": id },
+								success: function(rs) {
+									load_out();
+									var rs = $.trim(rs);
+									if (rs != "no_product") {
+										output.html(rs);
+									} else {
+										output.html("<center><h4>ไม่พบสินค้าในหมวดหมู่ที่เลือก</h4></center>");
+									}
+								}
+							});
+						}
+						
+						output.addClass("active");
+					}
+					
+					//--------------------------------  โหลดรายการสินค้าสำหรับจิ้มสั่งสินค้า  -----------------------------//
+					function getCategory(id) {
+						var output = $("#cat-" + id);
+						$(".tab-pane").removeClass("active");
+						$(".menu").removeClass("active");
+						if (output.html() == "") {
+							load_in();
+							$.ajax({
+								url: "controller/orderController.php?getCategoryProductGrid",
+								type: "POST",
+								cache: "false",
+								data: { "id_category": id },
+								success: function(rs) {
+									load_out();
+									var rs = $.trim(rs);
+									if (rs != "no_product") {
+										output.html(rs);
+									} else {
+										output.html("<center><h4>ไม่พบสินค้าในหมวดหมู่ที่เลือก</h4></center>");
+										$(".tab-pane").removeClass("active");
+										output.addClass("active");
+									}
+								}
+							});
+						}
+						output.addClass("active");
+					}
+				</script>';
 	return $sc;
 
 }
@@ -178,7 +234,7 @@ function subCategoryTab($parent, $ajax)
 			}
 			else
 			{
-				$sc .= '<li class=""><a href="#cat-'.$rs->id_category.'" role="tab" data-toggle="tab" onClick="'.$ajax.'('.$rs->id_category.')">'.$rs->category_name.'</a></li>';
+				$sc .= '<li class="menu"><a href="#cat-'.$rs->id_category.'" role="tab" data-toggle="tab" onClick="'.$ajax.'('.$rs->id_category.')">'.$rs->category_name.'</a></li>';
 			}
 			
 		}
@@ -209,7 +265,7 @@ function getSubCategoryTab($parent, $ajax)
 			}
 			else
 			{
-				$sc .= '<li class=""><a href="#cat-'.$rs->id_category.'" role="tab" data-toggle="tab" onClick="'.$ajax.'('.$rs->id_category.')">'.$rs->category_name.'</a></li>';
+				$sc .= '<li class="menu"><a href="#cat-'.$rs->id_category.'" role="tab" data-toggle="tab" onClick="'.$ajax.'('.$rs->id_category.')">'.$rs->category_name.'</a></li>';
 			}
 			
 		}

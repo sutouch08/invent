@@ -12,6 +12,13 @@ if( isset( $_GET['reportStockBalance'] ) && isset( $_GET['report'] ) )
 	include 'report/reportStockBalance.php';
 }
 
+
+//-----------  รายงานสินค้าคงเหลือปัจจุบัน
+if( isset( $_GET['reportStockCurrent'] ) && isset( $_GET['report'] ) )
+{
+	include 'report/reportStockCurrent.php';	
+}
+
 if( isset( $_GET['stock_by_zone'] ) && isset( $_GET['report'] ) )
 {
 	include 'report/reportStockZone.php';
@@ -31,6 +38,7 @@ if( isset( $_GET['stock_by_zone'] ) && isset( $_GET['export'] ) )
 {
 	include 'export/exportStockZone.php';
 }
+
 
 
 //------------------------------- Print  -------------------------------//

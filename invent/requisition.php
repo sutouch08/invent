@@ -274,7 +274,13 @@ echo"
 		<div class='row'><form id='state_change' action='controller/requisitionController.php?edit&state_change' method='post'>
 		<div class='col-xs-6'>
 		<table class='table' style='width:100%; padding:10px; border: 1px solid #ccc;'><tr><input type='hidden' name='id_order' value='".$order->id_order."' /><input type='hidden' name='id_employee' value='$id_employee' />
-		<td style='width:25%; text-align:right; vertical-align:middle;'>สถานะ :&nbsp; </td><td style='width:40%; padding-right:10px;'><select name='order_state' id='order_state' class='form-control input-sm'>"; orderStateList(); echo"</select></td><td style='padding-right:10px;'><button class='btn btn-default' type='button' onclick='state_change()'>เพิ่ม</button></td></tr>";
+		<td style='width:25%; text-align:right; vertical-align:middle;'>สถานะ :&nbsp; </td><td style='width:40%; padding-right:10px;'>
+		<select name='order_state' id='order_state' class='form-control input-sm'>
+			<option value='0'>---- สถานะ ----</option>
+				<option value='1'>รอการชำระเงิน</option>
+				<option value='3'>รอจัดสินค้า</option>";
+			if( $delete == 1 ){ echo "<option value='8'>ยกเลิก</option>"; }
+		echo"</select></td><td style='padding-right:10px;'><button class='btn btn-default' type='button' onclick='state_change()'>เพิ่ม</button></td></tr>";
 		$row = dbNumRows($state);
 		$i=0;
 		if($row>0){

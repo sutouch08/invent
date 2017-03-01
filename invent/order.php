@@ -10,6 +10,7 @@
 	$delete 			= $pm['delete'];
 	accessDeny($view);
 	include 'function/order_helper.php';
+	include "function/address_helper.php";
 	
 	//-------------  ตรวจสอบออเดอร์ที่หมดอายุทุกๆ 24 ชั่วโมง  -----------//
 	if( ! getCookie('expirationCheck') )  
@@ -600,7 +601,7 @@ $('#modal_approve_edit').on('shown.bs.modal', function () {  $('#edit_bill_passw
 <div class='row'>
 	<div class='col-sm-12'>
 		<ul class='nav navbar-nav' role='tablist' style='background-color:#EEE'>
-			<?php echo categoryTabMenu(); ?>										
+			<?php echo categoryTabMenu('view'); ?>										
 		</ul>
 	</div><!---/ col-sm-12 ---->
 </div><!---/ row -->
@@ -851,12 +852,13 @@ $('#modal_approve_edit').on('shown.bs.modal', function () {  $('#edit_bill_passw
                 <th style='width:5%; text-align:center;'>ID</th>
                 <th style='width:10%;'>เลขที่อ้างอิง</th>
                 <th style='width:20%;'>ลูกค้า</th>
+                <th style="width:10%;">จังหวัด</th>
                 <th style='width:10%;'>พนักงาน</th>
                 <th style='width:10%; text-align:center;'>ยอดเงิน</th>
                 <th style='width:10%; text-align:center;'>การชำระเงิน</th>
                 <th style='width:10%; text-align:center;'>สถานะ</th>
                 <th style='width:8%; text-align:center;'>วันที่เพิ่ม</th>
-                <th style='width:15%; text-align:center;'>วันที่ปรับปรุง</th>
+                <th style='width:8%; text-align:center;'>วันที่ปรับปรุง</th>
             </thead>
 <?php	$qs = dbQuery("SELECT * FROM tbl_order ".$where." LIMIT ".$paginator->Page_Start." , ".$paginator->Per_Page);		?>
 <?php	if( dbNumRows($qs) > 0) :		?>
@@ -865,30 +867,33 @@ $('#modal_approve_edit').on('shown.bs.modal', function () {  $('#edit_bill_passw
 <?php			$order = new order($id);		?>
 <?php			$online = getCustomerOnlineReference($id); ?>
 <?php			$customer_name = customer_name($order->id_customer); ?>
+<?php			$province = customerProvince($order->id_customer); ?>
 <?php			$customer  = $order->payment != 'ออนไลน์' ? $customer_name : ( $online != '' ? $customer_name.' ( '.$online.' )' : $customer_name );	?>
 <?php			if( $order->valid != 2 ) : ?>
-			<tr style='color:#FFF; background-color:<?php echo state_color($order->current_state); ?>; font-size:12px;'>
+			<tr style='color:#FFF; background-color:<?php echo state_color($order->current_state); ?>; font-size:10px;'>
 				<td align='center' style='cursor:pointer;' onclick="viewOrder(<?php echo $id; ?>)"><?php echo $id; ?></td>
 				<td style='cursor:pointer;' onclick="viewOrder(<?php echo $id; ?>)"><?php echo $order->reference; ?></td>
 				<td style='cursor:pointer;' onclick="viewOrder(<?php echo $id; ?>)"><?php echo $customer; ?></td>
+                <td style="cursor:pointer;" onclick="viewOrder(<?php echo $id; ?>)"><?php echo $province; ?></td>
 				<td style='cursor:pointer;' onclick="viewOrder(<?php echo $id; ?>)"><?php echo employee_name($order->id_employee); ?></td>
 				<td align='center' style='cursor:pointer;' onclick="viewOrder(<?php echo $id; ?>)"><?php echo number_format(orderAmount($id)); ?></td>
 				<td align='center' style='cursor:pointer;' onclick="viewOrder(<?php echo $id; ?>)"><?php echo $order->payment; ?></td>
 				<td align='center' style='cursor:pointer;' onclick="viewOrder(<?php echo $id; ?>)"><?php echo $order->current_state_name; ?></td>
 				<td align='center' style='cursor:pointer;' onclick="viewOrder(<?php echo $id; ?>)"><?php echo thaiDate($order->date_add); ?></td>
-				<td align='center' style='cursor:pointer;' onclick="viewOrder(<?php echo $id; ?>)"><?php echo thaiDateTime($order->date_upd); ?></td>
+				<td align='center' style='cursor:pointer;' onclick="viewOrder(<?php echo $id; ?>)"><?php echo thaiDate($order->date_upd); ?></td>
 			</tr>
 <?php		else : ?>
-			<tr style='color:#FFF; background-color:#434A54; font-size:12px;'>
+			<tr style='color:#FFF; background-color:#434A54; font-size:10px;'>
 				<td align='center'><?php echo $id; ?></td>
 				<td><?php echo $order->reference; ?></td>
 				<td><?php echo $customer; ?></td>
+                <td><?php echo $province; ?></td>
 				<td><?php echo employee_name($order->id_employee); ?></td>
 				<td align='center'><?php echo number_format(orderAmount($id)); ?></td>
 				<td align='center'><?php echo $order->payment; ?></td>
 				<td align='center'><?php echo $order->current_state_name; ?></td>
 				<td align='center'><?php echo thaiDate($order->date_add); ?></td>
-				<td align='center'><?php echo thaiDateTime($order->date_upd); ?></td>
+				<td align='center'><?php echo thaiDate($order->date_upd); ?></td>
 			</tr>            
 <?php			endif; ?>            
 <?php	endwhile; ?>		
@@ -956,3 +961,4 @@ $('#modal_approve_edit').on('shown.bs.modal', function () {  $('#edit_bill_passw
 </script>
 
 <script src="script/order.js"></script>
+>>

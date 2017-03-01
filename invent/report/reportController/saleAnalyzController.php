@@ -26,15 +26,6 @@ if( isset( $_GET['soldProductDeepAnalyz'] ) )
 							 ->setCategory("Sale Report");
 	$excel->setActiveSheetIndex(0);
 	$excel->getActiveSheet()->setTitle('รายงานวิเคราะห์ขายแบบละเอียด');
-	/*
-	$excel->getActiveSheet()->setCellValue('A1', 'รายงานวิเคราะห์ขายแบบละเอียด');
-	$excel->getActiveSheet()->setCellValue('A2', 'วันที่');
-	$excel->getActiveSheet()->setCellValue('B2', thaiDate($from, '/').' - '.thaiDate($to, '/') );
-	$excel->getActiveSheet()->setCellValue('A3', 'ช่องทางการขาย');
-	$excel->getActiveSheet()->setCellValue('B3', $roleName);
-	$excel->getActiveSheet()->setCellValue('D3', 'VAT');
-	$excel->getActiveSheet()->setCellValue('E3', $vat.' %');
-	*/
 	
 	//---------  หัวตาราง  ------------//
 	$excel->getActiveSheet()->setCellValue('A1', 'sold_date');
@@ -59,6 +50,11 @@ if( isset( $_GET['soldProductDeepAnalyz'] ) )
 	$excel->getActiveSheet()->setCellValue('T1', 'area');
 	$excel->getActiveSheet()->setCellValue('U1', 'group');
 	$excel->getActiveSheet()->setCellValue('V1', 'emp');
+	$excel->getActiveSheet()->setCellValue('W1', 'total_cost_ex');
+	$excel->getActiveSheet()->setCellValue('X1', 'total_cost_inc');
+	$excel->getActiveSheet()->setCellValue('Y1', 'margin_ex');
+	$excel->getActiveSheet()->setCellValue('Z1', 'margin_inc');
+	
 	
 	$qs = dbQuery("SELECT * FROM tbl_order_detail_sold WHERE id_role IN(".$role_in.") AND date_upd > '".$from."' AND date_upd < '".$to."' ORDER BY id_product ASC");
 	
@@ -95,6 +91,10 @@ if( isset( $_GET['soldProductDeepAnalyz'] ) )
 			$excel->getActiveSheet()->setCellValue('T'.$row, customerDefaultGroupName($rs['id_customer']) ); //---- เขตการขาย
 			$excel->getActiveSheet()->setCellValue('U'.$row, getProductGroupName($rs['id_product']));
 			$excel->getActiveSheet()->setCellValue('V'.$row, employee_name($rs['id_employee'])); //---- พนักงานผู้ทำรายการ
+			$excel->getActiveSheet()->setCellValue('W'.$row, removeVAT($rs['total_cost'], $vat) ); //---- ต้นทุนรวม (ไม่รวม VAT)
+			$excel->getActiveSheet()->setCellValue('X'.$row, $rs['total_cost']); //---- ต้นทุนรวม (รวม VAT)
+			$excel->getActiveSheet()->setCellValue('Y'.$row, removeVAT($rs['total_amount'], $vat) - removeVAT($rs['total_cost'], $vat) ); //---- กำไรขั้นต้น (ไม่รวม VAT)
+			$excel->getActiveSheet()->setCellValue('Z'.$row, $rs['total_amount'] -$rs['total_cost'] ); //---- กำไรขั้นต้น (รวม VAT )
 			
 			$row++;			
 			
@@ -104,6 +104,7 @@ if( isset( $_GET['soldProductDeepAnalyz'] ) )
 		$excel->getActiveSheet()->getStyle('G2:L'.$row)->getNumberFormat()->setFormatCode('#,##0.00');
 		$excel->getActiveSheet()->getStyle('M2:M'.$row)->getNumberFormat()->setFormatCode('#,##0');
 		$excel->getActiveSheet()->getStyle('N2:P'.$row)->getNumberFormat()->setFormatCode('#,##0.00');
+		$excel->getActiveSheet()->getStyle('W2:Z'.$row)->getNumberFormat()->setFormatCode('#,##0.00');
 		
 	}
 	

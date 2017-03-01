@@ -179,81 +179,7 @@
 </div>
 <!------------------------------------ End Category Menu ------------------------------------>	
 
-<!--	//*********************************  เริ่ม ORDER GRID ******************************************//  -->
-<!--
-	<div class='row'>
-	<div class='col-lg-12 col-md-12 col-sm-12 col-sx-12'>
-	<ul class='nav nav-tabs' role='tablist' style='background-color:#EEE'>
-	<?php /*
-				$sql = dbQuery("SELECT id_category, category_name FROM tbl_category WHERE parent_id = 0 AND level_depth = 1 ORDER BY position ASC");
-				$row = dbNumRows($sql);
-				$i=0;
-				while($i<$row) :
-				list($id_category, $category_name) = dbFetchArray($sql);
-				$sqr = dbQuery("SELECT id_category, category_name FROM tbl_category WHERE parent_id =". $id_category ." ORDER BY position ASC");
-				$rs = dbNumRows($sqr);
-				$n=0;
-				if($rs<1) : ?>
-					<li calss=""><a href="#cat-<?php echo $id_category; ?>" role='tab' data-toggle='tab'><?php echo $category_name; ?></a>
-		<?php else : ?>
-				<li class='dropdown'><a id='ul-<?php echo $id_category; ?>' class='dropdown-toggle' data-toggle='dropdown' href='#'><?php echo $category_name; ?><span class='caret'></span></a>
-				<ul class='dropdown-menu' role='menu' aria-labelledby='ul-<?php echo $id_category; ?>'>
-				<li class=''><a href='#cat-<?php echo $id_category; ?>' tabindex='-1' role='tab' data-toggle='tab'><?php echo $category_name; ?></a></li>
-		<?php while($n<$rs) : ?>
-		<?php	list($id_sub_category, $sub_category_name) = dbFetchArray($sqr); ?>
-					<li class=''><a href='#cat-<?php echo $id_sub_category; ?>' tabindex='-1' role='tab' data-toggle='tab'><?php echo $sub_category_name; ?></a></li>
-		<?php		$n++;  ?>
-		<?php endwhile; ?>
-				</ul></li>
-		<?php endif; ?>	
-				</li>
-		<?php $i++; ?>
-		<?php endwhile; ?>
-	</ul>
-	</div>
-	</div>
-<div class='row'><div class='col-lg-12 col-md-12 col-sm-12 col-sx-12'>
-<hr style='border-color:#CCC; margin-top: 0px; margin-bottom:15px;' />	
-<div class='tab-content'>
-<?php 
-	$query = dbQuery("SELECT id_category, category_name FROM tbl_category WHERE id_category !=0");
-	$rc = dbNumRows($query);
-	$r =0;
-	while($c = dbFetchArray($query)){
-		$id_category = $c['id_category'];
-		$cate_name = $c['category_name'];
-		echo"<div class='tab-pane"; if($r==0){ echo" active";} echo"' id='cat-$id_category'>";	
-		$sql = dbQuery("SELECT tbl_category_product.id_product FROM tbl_category_product LEFT JOIN tbl_product ON tbl_category_product.id_product = tbl_product.id_product WHERE id_category = $id_category AND tbl_product.active = 1 ORDER BY product_code ASC");
-		$row = dbNumRows($sql); 
-		if($row>0){
-			$i=0;
-			while($i<$row){
-				list($id_product) = dbFetchArray($sql);
-				$product = new product();
-				$product->product_detail($id_product);
-				
-		 echo"<div class='col-lg-1 col-md-1 col-sm-3 col-xs-4' style='text-align:center;'>
-			<div class='product' style='padding:5px;'>
-			<div class='image'><a href='javascript:void(0)' onclick='getData(".$product->id_product.")'>".$product->getCoverImage($product->id_product,1,"img-responsive")."</a></div>
-			<div class='description' style='font-size:10px; min-height:50px;'><a href='javascript:void(0)'  onclick='getData(".$product->id_product.")'>".$product->product_code. "<br/>".$product->product_price.
-			" : <span style='color:red'>".$product->available_product_qty($id_product)."</span>".
-			"</a></div>
-			  </div></div>";
-				$i++;
-				
-			}
-		}else{ 
-			echo"<br/><h4 style='text-align:center;'>ยังไม่มีรายการสินค้า</h4>";
-		}
-		$r++;
-		echo "</div>";
-	}	
-	echo"</div> 
-</div></div>";	
 
-//************************************ จบ ORDER GRID **********************************************/		
-?>
-		-->
         <button data-toggle='modal' data-target='#order_grid' id='btn_toggle' style='display:none;'>toggle</button>
 	<form action='controller/sponsorController.php?add_to_order' method='post'>
 	<div class='modal fade' id='order_grid' tabindex='-1' role='dialog' aria-labelledby='myModalLabel' aria-hidden='true'>
@@ -368,7 +294,9 @@
         	<option value="0" selected="selected">----  เลือกสถานะ  ---</option>
             <option value="1">รอการยืนยัน</option>
             <option value="3">รอจัดสินค้า</option>
-            <option value="8">ยกเลิก</option>
+	<?php if( $delete == 1 ) : ?>
+    		<option value="8">ยกเลิก</option>
+	<?php endif; ?>            
         </select>
    </td>
    <td style="padding-left:15px;"><button class="btn btn-primary" id="btn_state_change"><i class="fa fa-plus"></i>&nbsp;เพิ่ม</button></td>

@@ -12,7 +12,7 @@
   	if($add==1){ $can_add = "";}else{ $can_add = "style='display:none;'"; }
 	if($edit==1){ $can_edit = "";}else{ $can_edit = "style='display:none;'"; }
 	if($delete==1){ $can_delete = "";}else{ $can_delete ="style='display:none;'"; }	
-	function orderStateList($id_role){
+	/*function orderStateList($id_role){
 		$sql = dbQuery("SELECT * FROM tbl_order_state");
 		echo"<option value='0' selected='selected'> ---- สถานะ ---- </option>";
 		while($i=dbFetchArray($sql)){
@@ -27,7 +27,7 @@
 			$id_role = 4;
 		}else if($_GET['content'] == "order_not_sale5"){
 			$id_role = 5;
-		}
+		}*/
 	?>
     
 <div class="container">
@@ -192,8 +192,18 @@ echo"<form id='add_order_form' action='controller/orderController.php?add=y' met
 		<hr style='border-color:#CCC; margin-top: 0px; margin-bottom:15px;' />
 		<div class='row'><form id='state_change' action='controller/orderController.php?edit&state_change' method='post'>
 		<div class='col-lg-6'>
-		<table class='table' style='width:100%; padding:10px; border: 1px solid #ccc;'><tr><input type='hidden' name='id_order' value='".$order->id_order."' /><input type='hidden' name='id_employee' value='$id_employee' />
-		<td style='width:25%; text-align:right; vertical-align:middle;'>สถานะ :&nbsp; </td><td style='width:40%; padding-right:10px;'><select name='order_state' id='order_state' class='form-control input-sm'>"; orderStateList(); echo"</select></td><td style='padding-right:10px;'><button class='btn btn-default' type='button' onclick='state_change()'>เพิ่ม</button></td></tr>";
+		<table class='table' style='width:100%; padding:10px; border: 1px solid #ccc;'>
+			<tr>
+			<input type='hidden' name='id_order' value='".$order->id_order."' />
+			<input type='hidden' name='id_employee' value='$id_employee' />
+			<td style='width:25%; text-align:right; vertical-align:middle;'>สถานะ :&nbsp; </td>
+			<td style='width:40%; padding-right:10px;'>
+				<select name='order_state' id='order_state' class='form-control input-sm'>
+					<option value='0'>---- สถานะ ----</option>
+					<option value='1'>รอการชำระเงิน</option>
+					<option value='3'>รอจัดสินค้า</option>";
+			if( $delete == 1 ){ echo "<option value='8'>ยกเลิก</option>"; }
+					echo"</select></td><td style='padding-right:10px;'><button class='btn btn-default' type='button' onclick='state_change()'>เพิ่ม</button></td></tr>";
 		$row = dbNumRows($state);
 		$i=0;
 		if($row>0){

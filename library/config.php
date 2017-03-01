@@ -29,6 +29,7 @@ define("COOKIE_PATH", WEB_ROOT);
 define("CLASS_ROOT", SRV_ROOT."library/class/");
 require_once 'database.php';
 
+
 $under_zero = dbFetchArray(dbQuery("SELECT value FROM tbl_config WHERE config_name = 'ALLOW_UNDER_ZERO'"));
 if($under_zero ==1){ $allow_under_zero = true; }else if($under_zero ==0){ $allow_under_zero = false; }else{ $allow_under_zero = false; }
 define("ALLOW_UNDER_ZERO", $allow_under_zero);

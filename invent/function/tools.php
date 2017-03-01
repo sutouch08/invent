@@ -1920,22 +1920,20 @@ function order_grid_consign($id_cus=0, $id_order, $action="",$id_zone){
 
 
 
-
-
-//*********************** Dropdown List อัพเดตออเดอร์ ************************/
-function orderStateList($id_order){
-		$order = new order($id_order);
-		$payment = $order->payment;
-		if($payment =="โอนเงิน" || $payment =="เช็ค"){
-		$sql = dbQuery("SELECT * FROM tbl_order_state WHERE id_order_state IN(1,2,3,6,8)");
-		}else{
-		$sql = dbQuery("SELECT * FROM tbl_order_state WHERE id_order_state IN(1,3,8)");
-		}
-		echo"<option value='0' selected='selected'> ---- สถานะ ---- </option>";
-		while($i=dbFetchArray($sql)){
-			echo"<option value='".$i['id_order_state']."'>".$i['state_name']."</option>";
-		}
-	}
+function orderStateList($id_order)
+{
+	$id_tab 	= 14;
+	$id_profile = getCookie('profile_id');
+    $pm 		= checkAccess($id_profile, $id_tab);
+	$edit 		= $pm['edit'];
+	$delete 	= $pm['delete'];	
+	$sc 		= '<option value="0"> ---- สถานะ ---- </option>';
+	$sc 		.= $edit == 1 ? '<option value="1">รอการชำระเงิน</option>' : '';
+	$sc 		.= $edit == 1 ? '<option value="3">รอจัดสินค้า</option>' : '';
+	$sc 		.= $delete == 1 ? '<option value="8">ยกเลิก</option>' : '';
+	
+	return $sc;	
+}
 	
 	
 	

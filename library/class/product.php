@@ -1096,7 +1096,8 @@ public function getCoverImage($id_productx,$use_size='',$class=''){
 				$pre_fix = "product_mini_";
 			}
 			$image_path .= "/".$pre_fix.$id_image.".jpg";
-			if(file_exists("../..".$image_path) || file_exists("../../..".$image_path))
+			$image = DOC_ROOT.$image_path;
+			if( file_exists($image) )
 			{
 				return"<img ".$class_name."  src='$image_path' />";
 			}

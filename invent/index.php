@@ -130,6 +130,10 @@ switch($page){
 			$content = "order_closed.php";
 			$pageTitle = "รายการเปิดบิลแล้ว";
 			break;	
+		case "order_monitor" :
+			$content = "order_monitor.php";
+			$pageTitle = "ตรวจสอบออเดอร์";
+			break;
 		case "request" :
 			$content = "order_request.php";
 			$pageTitle = "ร้องขอสินค้า";
