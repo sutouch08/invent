@@ -39,6 +39,17 @@ if( isset( $_GET['stock_by_zone'] ) && isset( $_GET['export'] ) )
 	include 'export/exportStockZone.php';
 }
 
+if( isset( $_GET['stock_product_deep_analyz'] ) && isset( $_GET['export'] ) )
+{
+	include '../../function/group_helper.php';
+	include 'export/exportStockBalanceAnalyz.php';	
+}
+
+if( isset( $_GET['received_product_deep_analyz'] ) && isset( $_GET['export'] ) )
+{
+	include '../../function/group_helper.php';
+	include 'export/exportReceivedAnalyz.php';	
+}
 
 
 //------------------------------- Print  -------------------------------//

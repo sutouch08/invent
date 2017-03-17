@@ -123,7 +123,6 @@
                             <li><a href="index.php?content=sale_amount_detail"><i class="fa fa-bar-chart"></i>&nbsp; รายละเอียดการขาย แยกตามพนักงานขาย</a></li>
                             <li><a href="index.php?content=sale_amount_document"><i class="fa fa-bar-chart"></i>&nbsp; รายงานยอดขาย แยกตามพนักงานและเอกสาร</a></li> 
                             <li class="divider"></li>
-                            <li><a href="index.php?content=sale_product_deep_analyz"><i class="fa fa-bar-chart"></i>&nbsp;รายงานวิเคราะห์ขายแบบละเอียด</a></li>
                             <li><a href="index.php?content=sale_by_attribute"><i class="fa fa-bar-chart"></i>&nbsp;รายงานจำนวนขาย แยกตามคุณลักษณะสินค้า</a></li>                          
                         </ul>
                     </li>  
@@ -184,6 +183,11 @@
                     
                     <li class="dropdown-submenu"><a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-bar-chart"></i>&nbsp; รายงาน วิเคราะห์</a>
                     	<ul class="dropdown-menu">
+                        	<li><a href="index.php?content=sale_product_deep_analyz"><i class="fa fa-bar-chart"></i>&nbsp;รายงานวิเคราะห์ขายแบบละเอียด</a></li>
+                            <li><a href="index.php?content=sponsor_product_deep_analyz"><i class="fa fa-bar-chart"></i>&nbsp;รายงานวิเคราะห์สปอนเซอร์แบบละเอียด</a></li>
+                            <li><a href="index.php?content=stock_product_deep_analyz"><i class="fa fa-bar-chart"></i>&nbsp;รายงานวิเคราะห์สินค้าคงเหลือแบบละเอียด</a></li>
+                            <li><a href="index.php?content=received_product_deep_analyz"><i class="fa fa-bar-chart"></i>&nbsp;รายงานวิเคราะห์การรับสินค้าเข้าแบบละเอียด</a></li>
+                            <li class="divider"></li>
                             <li><a href="index.php?content=customer_by_product"><i class="fa fa-bar-chart"></i>&nbsp;รายงานลูกค้า แยกตามสินค้า</a></li>
                              <li><a href="index.php?content=customer_by_product_attribute"><i class="fa fa-bar-chart"></i>&nbsp;รายงานลูกค้า แยกตามรายการสินค้า</a></li>
                              <li><a href="index.php?content=product_by_customer"><i class="fa fa-bar-chart"></i>&nbsp;รายงานสินค้า แยกตามลูกค้า</a></li>

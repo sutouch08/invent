@@ -330,10 +330,7 @@ switch($page){
 			$content = "report/support_summary.php";
 			$pageTitle = "รายงานสรุป ยอดเบิกอภินันทนาการ";
 			break;	
-		case "support_product_deep_analyz" :
-			$content = "report/support_product_deep_analyz.php";
-			$pageTitle = "รายงานวิเคราะห์อภินันท์แบบละเอียด";
-			break;			
+					
 	//*****  รายงานตรวจสอบ  *****//
 		case "discount_edit":
 			$content = "report/discount_edit_report.php";
@@ -441,6 +438,28 @@ switch($page){
 			$content = "report/attribute_analyz.php";
 			$pageTitle = "วิเคราะคุณลักษณะสินค้า";
 			break;			
+			
+		case 'sale_product_deep_analyz' :
+			$content 		= 'report/sale_product_deep_analyz.php';
+			$pageTitle	= 'รายงานวิเคราะห์ขายแบบละเอียด';
+			break;
+		case 'sponsor_product_deep_analyz' :
+			$content 		= 'report/sponsor_product_deep_analyz.php';	
+			$pageTitle	= 'รายงานวิเคราะห์สปอนเซอร์แบบละเอียด';
+			break;	
+		case 'stock_product_deep_analyz' :
+			$content		= 'report/stock_product_deep_analyz.php';
+			$pageTitle	= 'รายงานวิเคราะห์สินค้าคงเหลือแบบละเอียด';
+			break;
+		case "support_product_deep_analyz" :
+			$content 		= "report/support_product_deep_analyz.php";
+			$pageTitle 	= "รายงานวิเคราะห์อภินันท์แบบละเอียด";
+			break;
+		case 'received_product_deep_analyz' :
+			$content 		= 'report/received_product_deep_analyz.php';
+			$pageTitle	= 'รายงานการรับสินค้าเข้าแบบละเอียด';
+			break;
+			
 	//*****  รายงานผู้บริหาร  *****//
 		case "sale_profit_by_item" :
 			$content		= "report/sale_profit_by_item.php";
@@ -449,12 +468,7 @@ switch($page){
 		case "sale_profit_by_customer" :
 			$content		= "report/sale_profit_by_customer.php";
 			$pageTitle 	= "รายงานยอดขาย แยกตามลูกค้า แสดงกำไรขั้นต้น";
-			break;
-		case 'sale_product_deep_analyz' :
-			$content 		= 'report/sale_product_deep_analyz.php';
-			$pageTitle	= 'รายงานวิเคราะห์ขายแบบละเอียด';
-			break;
-			
+			break;			
 	
 	//******  รายงานอื่นๆ  *****//
 		case "order_freq":

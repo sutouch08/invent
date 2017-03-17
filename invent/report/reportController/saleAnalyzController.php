@@ -12,7 +12,7 @@ if( isset( $_GET['soldProductDeepAnalyz'] ) )
 	$roleName = $role == 1 ? 'ขายปกติ' : ( $role == 5 ? 'ฝากขาย' : 'ทั้งหมด' );
 	$from = fromDate($_GET['from']);
 	$to	= toDate($_GET['to']);
-	$vat	= getConfig('VAT');
+	$vat	= getConfig('VAT'); //---- 7
 	$pred = date("dmY", strtotime($from)) .' - '. date("dmY", strtotime($to));
 	//$pGroup	= getConfig('ITEMS_GROUP');
 	$excel	= new PHPExcel();
@@ -75,8 +75,8 @@ if( isset( $_GET['soldProductDeepAnalyz'] ) )
 			$excel->getActiveSheet()->setCellValue('D'.$row, get_size_name($pa['id_size']) ); //------- Size
 			$excel->getActiveSheet()->setCellValue('E'.$row, get_attribute_name($pa['id_attribute']) ); //----- คุณลักษระอื่นๆ
 			$excel->getActiveSheet()->setCellValue('F'.$row, getDefaultCategoryName($rs['id_product']) ); //----- กลุ่มสินค้า
-			$excel->getActiveSheet()->setCellValue('G'.$row, removeVAT($rs['cost'], $vat) ); //-----  ทุนไม่รวม VAT
-			$excel->getActiveSheet()->setCellValue('H'.$row, $rs['cost'] ); //----- ทุนรวม VAT
+			$excel->getActiveSheet()->setCellValue('G'.$row, $rs['cost'] ); //-----  ทุนไม่รวม VAT
+			$excel->getActiveSheet()->setCellValue('H'.$row, addVAT($rs['cost'], $vat) ); //----- ทุนรวม VAT
 			$excel->getActiveSheet()->setCellValue('I'.$row, removeVAT($rs['product_price'], $vat) ); //----- ราคาป้าย ไม่ราม VAT
 			$excel->getActiveSheet()->setCellValue('J'.$row, $rs['product_price'] ); //----- ราคาป้าย
 			$excel->getActiveSheet()->setCellValue('K'.$row, removeVAT($rs['final_price'], $vat) ); //----- ขายไม่รวม VAT
@@ -91,10 +91,10 @@ if( isset( $_GET['soldProductDeepAnalyz'] ) )
 			$excel->getActiveSheet()->setCellValue('T'.$row, customerDefaultGroupName($rs['id_customer']) ); //---- เขตการขาย
 			$excel->getActiveSheet()->setCellValue('U'.$row, getProductGroupName($rs['id_product']));
 			$excel->getActiveSheet()->setCellValue('V'.$row, employee_name($rs['id_employee'])); //---- พนักงานผู้ทำรายการ
-			$excel->getActiveSheet()->setCellValue('W'.$row, removeVAT($rs['total_cost'], $vat) ); //---- ต้นทุนรวม (ไม่รวม VAT)
-			$excel->getActiveSheet()->setCellValue('X'.$row, $rs['total_cost']); //---- ต้นทุนรวม (รวม VAT)
-			$excel->getActiveSheet()->setCellValue('Y'.$row, removeVAT($rs['total_amount'], $vat) - removeVAT($rs['total_cost'], $vat) ); //---- กำไรขั้นต้น (ไม่รวม VAT)
-			$excel->getActiveSheet()->setCellValue('Z'.$row, $rs['total_amount'] -$rs['total_cost'] ); //---- กำไรขั้นต้น (รวม VAT )
+			$excel->getActiveSheet()->setCellValue('W'.$row, $rs['total_cost']); //---- ต้นทุนรวม (ไม่รวม VAT)
+			$excel->getActiveSheet()->setCellValue('X'.$row, addVAT($rs['total_cost'], $vat)); //---- ต้นทุนรวม (รวม VAT)
+			$excel->getActiveSheet()->setCellValue('Y'.$row, removeVAT($rs['total_amount'], $vat) - $rs['total_cost'] ); //---- กำไรขั้นต้น (ไม่รวม VAT)
+			$excel->getActiveSheet()->setCellValue('Z'.$row, $rs['total_amount'] - addVAT($rs['total_cost'], $vat) ); //---- กำไรขั้นต้น (รวม VAT )
 			
 			$row++;			
 			
@@ -107,6 +107,7 @@ if( isset( $_GET['soldProductDeepAnalyz'] ) )
 		$excel->getActiveSheet()->getStyle('W2:Z'.$row)->getNumberFormat()->setFormatCode('#,##0.00');
 		
 	}
+
 	
 	setToken($_GET['token']);
 	$file_name = "รายงานวิเคราะห์ขายแบบละเอียด".$pred.".xlsx";
@@ -114,6 +115,7 @@ if( isset( $_GET['soldProductDeepAnalyz'] ) )
 	header('Content-Disposition: attachment;filename="'.$file_name.'"');
 	$writer = PHPExcel_IOFactory::createWriter($excel, 'Excel2007');
 	$writer->save('php://output');	
+	
 }
 
 

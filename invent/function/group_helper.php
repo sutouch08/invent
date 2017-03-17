@@ -21,4 +21,15 @@ function selectGroup($se = '' )
 	}
 	return $sc;
 }
+
+function productGroupName($id)
+{
+	$sc = "";
+	$qs = dbQuery("SELECT name FROM tbl_product_group WHERE id = ".$id);
+	if( dbNumRows($qs) == 1 )
+	{
+		list( $sc ) = dbFetchArray($qs);
+	}
+	return $sc;
+}
 ?>

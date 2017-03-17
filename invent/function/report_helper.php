@@ -69,6 +69,13 @@ function removeVAT($amount, $vat=7)
 	return $amount/$re_vat;
 }
 
+function addVAT($amount, $vat = 7)
+{
+	$re_vat = $vat * 0.01;
+	$sc = ($amount * $re_vat) + $amount;
+	return $sc;
+}
+
 function getProductAttribute($id_pa)
 {
 	$sc = array('id_color' => 0, 'id_size' => 0, 'id_attribute' => 0);
