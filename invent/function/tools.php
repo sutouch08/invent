@@ -1,5 +1,14 @@
 <?php  
-
+function getInvoice($id_order)
+{
+	$sc = "";
+	$qs = dbQuery("SELECT invoice FROM tbl_order_invoice WHERE id_order = ".$id_order);
+	if( dbNumRows($qs) == 1 )
+	{
+		list( $sc ) = dbFetchArray($qs);	
+	}
+	return $sc;
+}
 function getCategoryMaxDepth()
 {
 	$sc = 1;

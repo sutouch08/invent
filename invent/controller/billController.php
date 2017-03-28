@@ -199,6 +199,7 @@ if( isset( $_GET['print_order']) && isset( $_GET['id_order'] ) )
 	$order 		= new order($id_order);
 	$print 		= new printer();
 	$doc			= doc_type($order->role);
+	$invoice		= getInvoice($id_order);
 	echo $print->doc_header();
 	$print->add_title($doc['title']);
 	$header		= get_header($order);
@@ -475,7 +476,7 @@ if(isset($_GET['repay'])){
 
 if(isset($_GET['clear_filter']))
 {
-	$cookie = array("fromDate", "toDate", "reference", "cusName", "empName", "order", "consign", "sponsor", "support", "reform", "sortDate");
+	$cookie = array("fromDate", "toDate", "reference", "invoice_no", "noInvoice", "cusName", "empName", "order", "consign", "sponsor", "support", "reform", "sortDate");
 	foreach($cookie as $name)
 	{
 		deleteCookie($name);

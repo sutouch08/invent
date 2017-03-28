@@ -18,6 +18,10 @@
     	<input type="text" class="form-control input-sm input-discount text-center" name="fromDate" id="fromDate" placeholder="เริ่มต้น" />
         <input type="text" class="form-control input-sm input-unit text-center" name="toDate" id="toDate" placeholder="สิ้นสุด" />
     </div>
+    <div class="col-sm-3">
+    	<label style="display:block;">ส่วนลดสำหรับประมาณการยอดขาย</label>
+        <input type="text" class="form-control input-sm text-center" name="discount" id="discount" placeholder="ส่วนลดสำหรับประมาณการยอดขาย" />
+    </div>
 </div>
 <hr style="margin-bottom:35px;"/>
 <div class="row">
@@ -44,9 +48,10 @@ function doExport()
 {
 	var from 	= $("#fromDate").val();
 	var to		= $("#toDate").val();
+	var disc	= $("#discount").val();
 	if( !isDate(from) || !isDate(to) ){ swal("วันที่ไม่ถูกต้อง");  return false; }
 	var token	= new Date().getTime();
-	var url 		= "report/reportController/stockReportController.php?receivedProductDeepAnalyz&from="+from+"&to="+to+"&token="+token;
+	var url 		= "report/reportController/stockReportController.php?received_product_deep_analyz&export&from="+from+"&to="+to+"&discount="+disc+"&token="+token;
 	get_download(token);
 	window.location.href = url;
 }

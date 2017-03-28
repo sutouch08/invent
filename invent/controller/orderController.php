@@ -5,6 +5,43 @@ require "../function/tools.php";
 include '../function/order_helper.php';
 
 //------------------------------------------------------------          NEW CODE         -------------------------------------------------------//
+
+//-------------------------  Update Invoice -------------------------//
+if( isset( $_GET['updateInvoice'] ) )
+{
+	$sc 			= 'fail';
+	$id_order 	= $_POST['id_order'];
+	$invoice 		= $_POST['invoice'];	
+	
+	$qs = dbQuery("SELECT invoice FROM tbl_order_invoice WHERE id_order = ".$id_order);
+	if( dbNumRows($qs) == 0 )
+	{
+		$qr = dbQuery("INSERT INTO tbl_order_invoice (id_order, invoice) VALUES (".$id_order.", '".$invoice."')");
+	}
+	else
+	{
+		$qr = dbQuery("UPDATE tbl_order_invoice SET invoice = '".$invoice."' WHERE id_order = ".$id_order);	
+	}
+	if( $qr === TRUE )
+	{
+		$sc = 'success';
+	}
+	
+	echo $sc;
+}
+
+if( isset( $_GET['deleteInvoice'] ) )
+{
+	$sc = "fail";
+	$id_order = $_POST['id_order'];
+	$qs = dbQuery("DELETE FROM tbl_order_invoice WHERE id_order = ".$id_order);
+	if( $qs )
+	{
+		$sc = "success";
+	}
+	echo $sc;
+}
+
 //------------------------- บันทึก/แก้ไข ค่าบริการอื่นๆ ------------------//
 if( isset( $_GET['saveServiceFee'] ) )
 {

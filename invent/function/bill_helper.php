@@ -176,23 +176,56 @@ function get_header($order)
 {
 	if($order->role == 3 )
 	{
-		$header		= array("เลขที่เอกสาร"=>$order->reference, "วันที่"=>thaiDate($order->date_add), "ผู้ยืม"=>employee_name($order->id_employee), "ผู้ทำรายการ" => employee_name(get_lend_user_id($order->id_order)) );
+		$header		= array(
+								"เลขที่เอกสาร"=>$order->reference, 
+								"วันที่"=>thaiDate($order->date_add), 
+								"ผู้ยืม"=>employee_name($order->id_employee), 
+								"ผู้ทำรายการ" => employee_name(get_lend_user_id($order->id_order)),
+								"เลขที่อ้างอิง"	=> getInvoice($order->id_order)
+							);
 	}
 	else if( $order->role == 2 || $order->role == 6 )
 	{
-		$header		= array("ลูกค้า"=>customer_name($order->id_customer), "วันที่"=>thaiDate($order->date_add), "ผู้เบิก"=>employee_name($order->id_employee), "เลขที่เอกสาร"=>$order->reference);	
+		$header		= array(
+									"ลูกค้า"=>customer_name($order->id_customer), 
+									"วันที่"=>thaiDate($order->date_add), 
+									"ผู้เบิก"=>employee_name($order->id_employee), 
+									"เลขที่เอกสาร"=>$order->reference,
+									"เลขที่อ้างอิง"	=> getInvoice($order->id_order)
+									
+									);	
 	}
 	else if( $order->role == 7)
 	{
-		$header	= array("ผู้รับ"=>customer_name($order->id_customer), "วันที่"=>thaiDate($order->date_add), "ผู้เบิก"=>employee_name($order->id_employee), "เลขที่เอกสาร"=>$order->reference, "ผู้ดำเนินการ" => employee_name(get_id_user_support($order->id_order)));		
+		$header	= array(
+									"ผู้รับ"=>customer_name($order->id_customer), 
+									"วันที่"=>thaiDate($order->date_add), 
+									"ผู้เบิก"=>employee_name($order->id_employee), 
+									"เลขที่เอกสาร"=>$order->reference, 
+									"ผู้ดำเนินการ" => employee_name(get_id_user_support($order->id_order)),
+									"เลขที่อ้างอิง"	=> getInvoice($order->id_order)
+									);		
 	}
 	else if( $order->role == 4 )
 	{
-		$header	= array("ผู้รับ"=>customer_name($order->id_customer), "วันที่"=>thaiDate($order->date_add), "ผู้เบิก"=>employee_name($order->id_employee), "เลขที่เอกสาร"=>$order->reference, "ผู้ดำเนินการ" => employee_name(get_id_user_sponsor($order->id_order)));
+		$header	= array(
+								"ผู้รับ"=>customer_name($order->id_customer), 
+								"วันที่"=>thaiDate($order->date_add), 
+								"ผู้เบิก"=>employee_name($order->id_employee), 
+								"เลขที่เอกสาร"=>$order->reference, 
+								"ผู้ดำเนินการ" => employee_name(get_id_user_sponsor($order->id_order)),
+								"เลขที่อ้างอิง"	=> getInvoice($order->id_order)
+								);
 	}
 	else
 	{
-		$header		= array("ลูกค้า"=>customer_name($order->id_customer), "วันที่"=>thaiDate($order->date_add), "พนักงานขาย"=>sale_name($order->id_sale), "เลขที่เอกสาร"=>$order->reference);
+		$header	= array(
+							"ลูกค้า"=>customer_name($order->id_customer), 
+							"วันที่"=>thaiDate($order->date_add), 
+							"พนักงานขาย"=>sale_name($order->id_sale), 
+							"เลขที่เอกสาร"=>$order->reference,
+							"เลขที่อ้างอิง"	=> getInvoice($order->id_order)
+							);
 	}	
 	
 	return $header;

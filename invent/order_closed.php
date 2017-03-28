@@ -119,6 +119,8 @@
 				$em_label = "พนักงานขาย : ";
 				$em_info = $sale->full_name;
 			}	
+			
+			$invoice = getInvoice($id_order);
 ?>	
 	  <div class='row'>
         	<div class='col-lg-2'>	<strong><?php echo $reference; ?></strong></div>
@@ -131,6 +133,14 @@
 		<dl style='float:left; margin-left:10px;'><dt style='float:left; margin:0px; padding-right:10px'>วันที่สั่ง : &nbsp;</dt><dd style='float:left; margin:0px; padding-right:10px'><?php echo thaiDate($order->date_add); ?></dd>  |</dt></dl>
 		<dl style='float:left; margin-left:10px;'><dt style='float:left; margin:0px; padding-right:10px'>สินค้า :&nbsp;</dt><dd style='float:left; margin:0px; padding-right:10px'><?php echo number_format($order->total_product); ?></dd>  |</dt></dl>
 		<dl style='float:left; margin-left:10px;'><dt style='float:left; margin:0px; padding-right:10px'>จำนวน : &nbsp;</dt><dd style='float:left; margin:0px; padding-right:10px'><?php echo number_format($order->total_qty); ?></dd>  |</dt></dl>
+        <dl style='float:left; margin-left:10px;'><dt style='float:left; margin:0px; padding-right:0px'>อ้างอิง : &nbsp;</dt>
+        <dd style='float:left; margin:0px; padding-right:10px'>
+        	<span id="invoice_<?php echo $id_order; ?>"><?php echo $invoice; ?> </span>
+			<?php if( $invoice != "" ) : ?>
+            	<button type="button" class="btn btn-warning btn-mini" onclick="editInvoice(<?php echo $id_order; ?>)">แก้ไข</button>
+                <button type="button" class="btn btn-danger btn-mini" onclick="deleteInvoice(<?php echo $id_order; ?>)">ลบ</button>
+            <?php endif; ?>
+        </dd>  |</dt></dl>
 <?php if($order->role == 7) : ?>
 		<dl style='float:left; margin-left:10px;'><dt style='float:left; margin:0px; padding-right:10px'>ผู้ดำเนินการ : &nbsp;</dt><dd style='float:left; margin:0px; padding-right:10px'><?php echo $user; ?></dd> </dt></dl>    
 <?php endif; ?>            
@@ -286,6 +296,7 @@
 								'fromDate' 	=> isset( $_POST['from_date'] ) ? $_POST['from_date'] : ( getCookie('fromDate') ? getCookie('fromDate') : '' ),
 								'toDate'		=> isset( $_POST['to_date'] ) ? $_POST['to_date'] : ( getCookie('toDate') ? getCookie('toDate') : '' ),
 								'reference'	=> isset( $_POST['reference'] ) ? $_POST['reference'] : ( getCookie('reference') ? getCookie('reference') : '' ),
+								'invoice'		=> isset( $_POST['invoice_no'] ) ? $_POST['invoice_no'] : ( getCookie('invoice_no') ? getCookie('invoice_no') : ''),
 								'cusName'	=> isset( $_POST['cusName'] ) ? $_POST['cusName'] : ( getCookie('cusName') ? getCookie('cusName') : '' ),
 								'empName'	=> isset( $_POST['empName'] ) ? $_POST['empName'] : ( getCookie('empName') ? getCookie('empName') : '' )
 						);
@@ -295,7 +306,8 @@
 								'sponsor'		=> isset( $_POST['sponsor'] ) ? $_POST['sponsor'] : ( getCookie('sponsor') ? getCookie('sponsor') : 0 ),
 								'support'		=> isset( $_POST['support'] ) ? $_POST['support'] : ( getCookie('support') ? getCookie('support') : 0 ),
 								'reform'		=> isset( $_POST['reform'] ) ? $_POST['reform'] : ( getCookie('reform') ? getCookie('reform') : 0 ),
-								'sortDate'	=> isset( $_POST['sortDate'] ) ? $_POST['sortDate'] : ( getCookie('sortDate') ? getCookie('sortDate') : 0 ) //--- 0 => sort by date_add,  1 => sort by date_upd
+								'sortDate'	=> isset( $_POST['sortDate'] ) ? $_POST['sortDate'] : ( getCookie('sortDate') ? getCookie('sortDate') : 0 ), //--- 0 => sort by date_add,  1 => sort by date_upd
+								'noInvoice'	=> isset( $_POST['noInvoice'] ) ? $_POST['noInvoice'] : ( getCookie('noInvoice') ? getCookie('noInvoice') : 0)
 						);
 							
 	$btn = array();		
@@ -324,15 +336,19 @@
 
 <form  method='post' id='form'>
 <div class="row">
-	<div class="col-sm-1 col-1-harf padding-5">
+	<div class="col-sm-2 padding-5 first">
     	<label>เอกสาร</label>
         <input type="text" class="form-control input-sm filter" name="reference" id="reference" placeholder="ค้นเลขที่เอกสาร" value="<?php echo $ds['reference']; ?>" />
     </div>
-    <div class="col-sm-1 col-1-harf padding-5">
+    <div class="col-sm-2 padding-5">
+    	<label>เลขที่อ้างอิง</label>
+        <input type="text" class="form-control input-sm filter" name="invoice_no" id="invoice_no" placeholder="ค้นเลขที่อ้างอิง" value="<?php echo $ds['invoice']; ?>" />
+    </div>    
+    <div class="col-sm-2 padding-5">
     	<label>ลูกค้า</label>
         <input type="text" class="form-control input-sm filter" name="cusName" id="cusName" placeholder="ค้นหาชื่อลูกค้า" value="<?php echo $ds['cusName']; ?>" />
     </div>
-    <div class="col-sm-1 col-1-harf padding-5">
+    <div class="col-sm-2 padding-5">
     	<label>พนักงาน</label>
         <input type="text" class="form-control input-sm filter" name="empName" id="empName" placeholder="ค้นหาชื่อพนักงาน" value="<?php echo $ds['empName']; ?>" />        
     </div>
@@ -341,14 +357,14 @@
         <input type="text" class="form-control input-sm input-discount text-center" name="from_date" id="from_date" value="<?php echo $ds['fromDate']; ?>" />
         <input type="text" class="form-control input-sm input-unit text-center" name="to_date" id="to_date" value="<?php echo $ds['toDate']; ?>" />
     </div>
-    <div class="col-sm-2 padding-5">
+    <div class="col-sm-2 padding-5 last">
     	<label style="display:block; visibility:hidden">sort date</label>
         <div class="btn-group width-100">
     		<button type="button" class="btn btn-sm width-50 <?php echo $dateAdd; ?>" id="btn-dateAdd" onclick="toggleDate('dateAdd')">วันที่เอกสาร</button>
             <button type="button" class="btn btn-sm width-50 <?php echo $dateUpd; ?>" id="btn-dateUpd" onclick="toggleDate('dateUpd')">วันที่ปรับปรุง</button>
 		</div>            
     </div>
-    <div class="col-sm-3 col-3-harf padding-5 last">
+    <div class="col-sm-4 padding-5 first">
     	<label style="display:block; visibility:hidden;">วันที่</label>
     	<div class="btn-group width-100">
             <button type="button" class="btn btn-sm width-20 <?php echo $btn['order']; ?>" id="btn-order" onclick="toggleOrderType('order', 1)">ขาย</button>
@@ -358,12 +374,17 @@
             <button type="button" class="btn btn-sm width-20 <?php echo $btn['reform']; ?>" id="btn-reform" onclick="toggleOrderType('reform', 26)">แปรสภาพ</button> 
         </div>
     </div>
+    <div class="col-sm-1">
+    	<label style="display:block; visibility:hidden;">noinvoice</label>
+    	<button type="button" class="btn btn-sm <?php echo $btn['noInvoice']; ?>" id="btn-noInvoice" onclick="toggleNoInvoice()">ไม่มีเลขที่อ้างอิง</button>
+    </div>
     <input type="hidden" name="order" id="order" value="<?php echo $os['order']; ?>" />
     <input type="hidden" name="consign" id="consign" value="<?php echo $os['consign']; ?>" />
     <input type="hidden" name="sponsor" id="sponsor" value="<?php echo $os['sponsor']; ?>" />
     <input type="hidden" name="support" id="support" value="<?php echo $os['support']; ?>" />
     <input type="hidden" name="reform" id="reform" value="<?php echo $os['reform']; ?>" />
     <input type="hidden" name="sortDate" id="sortDate" value="<?php echo $os['sortDate']; ?>" />
+    <input type="hidden" name="noInvoice" id="noInvoice" value="<?php echo $os['noInvoice']; ?>" />
     
 </div>
 </form>
@@ -378,6 +399,16 @@
 	if( $ds['reference'] != '' )
 	{
 		$where .= "AND reference LIKE '%".$ds['reference']."%' ";	
+	}
+	
+	if( $ds['invoice'] != "" )
+	{
+		$where .= "AND invoice LIKE '%".$ds['invoice']."%' ";	
+	}
+	
+	if( $os['noInvoice'] != 0 )
+	{
+		$where .= "AND invoice IS NULL ";
 	}
 	
 	if( $ds['cusName'] != '' )
@@ -402,7 +433,7 @@
 		}
 		else
 		{
-			$where .= "AND date_upd >= '".$from."' AND date_upd <= '".$to."' ";	
+			$where .= "AND tbl_order.date_upd >= '".$from."' AND tbl_order.date_upd <= '".$to."' ";	
 		}
 	}
 	
@@ -410,12 +441,12 @@
 	{
 		$where .= "AND role IN(".$role_in.") ";	
 	}
-	$where .= "ORDER BY date_upd DESC ";
+	$where .= "ORDER BY tbl_order.date_upd DESC ";
 	
 	$paginator = new paginator();
 	$get_rows = isset( $_POST['get_rows'] ) ? $_POST['get_rows'] : ( getCookie('get_rows') ? getCookie('get_rows') : 50 );
 	$paginator->setcookie_rows($get_rows);
-	$paginator->Per_Page('tbl_order', $where, $get_rows);
+	$paginator->Per_Page('tbl_order LEFT JOIN tbl_order_invoice ON tbl_order.id_order = tbl_order_invoice.id_order ', $where, $get_rows);
 	$paginator->display($get_rows, 'index.php?content=order_closed');
 	$Page_Start = $paginator->Page_Start;
 	$Per_Page = $paginator->Per_Page;
@@ -425,15 +456,16 @@
 	<table class='table table-striped table-bordered'>
     	<thead style="font-size:12px;">
         	<th style='width:5%; text-align:center;'>ลำดับ</th>
-			<th style='width:10%; text-align:center;'>เลขที่อ้างอิง</th>
+			<th style='width:10%; text-align:center;'>เลขที่เอกสาร</th>
             <th style='width:20%; text-align:center;'>ลูกค้า</th>
             <th style='width:10%; text-align:center;'>ยอดเงิน</th>
-			<th style='width:15%; text-align:center;'>เงื่อนไข</th>
+			<th style='width:10%; text-align:center;'>เงื่อนไข</th>
 			<th style='width:10%; text-align:center;'>พนักงาน</th>
-			<th style='width:15%; text-align:center;'>วันที่เอกสาร</th>
+			<th style='width:10%; text-align:center;'>วันที่เอกสาร</th>
 			<th style='width:15%; text-align:center;'>วันที่ปรับปรุง</th>
-        </thead>
-<?php  	$qs	= dbQuery("SELECT * FROM tbl_order " . $where . " LIMIT ". $paginator->Page_Start .", ". $paginator->Per_Page);	?>
+            <th style='width:10%; text-align:center;'>เลขที่อ้างอิง</th>
+        </thead>      
+<?php  	$qs	= dbQuery("SELECT tbl_order.*, invoice FROM tbl_order LEFT JOIN tbl_order_invoice ON tbl_order.id_order = tbl_order_invoice.id_order " . $where . " LIMIT ". $paginator->Page_Start .", ". $paginator->Per_Page);	?>
 <?php 	$n 	= 1;		?>
 <?php	if(dbNumRows($qs) > 0) :	?>
 <?php		while( $rs = dbFetchObject($qs) ) :			?>
@@ -444,12 +476,20 @@
                 <td align="center" class="pointer" onclick="viewOrder(<?php echo $rs->id_order; ?>)"><?php echo number_format(orderAmount($rs->id_order), 2); ?></td>
                 <td align="center" class="pointer" onclick="viewOrder(<?php echo $rs->id_order; ?>)"><?php echo $rs->payment; ?></td>
                 <td align="center" class="pointer" onclick="viewOrder(<?php echo $rs->id_order; ?>)"><?php echo employee_name($rs->id_employee); ?></td>
-                <td align="center" class="pointer" onclick="viewOrder(<?php echo $rs->id_order; ?>)"><?php echo thaiDateTime($rs->date_add); ?></td>
+                <td align="center" class="pointer" onclick="viewOrder(<?php echo $rs->id_order; ?>)"><?php echo thaiDate($rs->date_add); ?></td>
                 <td align="center" class="pointer" onclick="viewOrder(<?php echo $rs->id_order; ?>)"><?php echo thaiDateTime($rs->date_upd); ?></td>
+                <td align="center">
+                	<?php if( ! is_null($rs->invoice) ) : ?>
+                    <?php	echo $rs->invoice; ?>	
+                    <?php else : ?>
+                    <input type="text" class="form-control input-sm invoice" id="invoice_<?php echo $rs->id_order; ?>" />
+                    <span id="span_invoice_<?php echo $rs->id_order; ?>" class="hide"></span>
+                    <?php endif; ?>
+                </td>
             </tr>
 <?php	$n++;  ?>
-<?php 	endwhile; ?>		
-<?php endif; ?>
+<?php 	endwhile;  ?>		
+<?php endif;  ?>
 	</table>
 <?php	echo $paginator->display_pages(); ?>
 <h3>&nbsp;</h3>
@@ -471,7 +511,134 @@
 		</div>
 	</div>
     
+    <div class='modal fade' id='invoiceModal' tabindex='-1' role='dialog' aria-labelledby='myModalLabel' aria-hidden='true'>
+		<div class='modal-dialog' style="width:250px;">
+			<div class='modal-content'>
+	  			<div class='modal-header'>
+					<button type='button' class='close' data-dismiss='modal' aria-hidden='true'>&times;</button>
+                    <h4 class='modal-title-site text-center' > แก้ไขเลขที่อ้างอิง </h4>
+                    <input type="hidden" id="id_order_inv" />
+				 </div>
+				 <div class='modal-body'>
+                 <input type="text" class="form-control input-sm" id="input-invoice" />    
+                 <button type="button" class="btn btn-primary btn-sm pull-right top-col" onClick="updateInvoice()"><i class="fa fa-save"></i> บันทึก</button>             	
+                 </div>
+				 <div class='modal-footer'>
+				 </div>
+			</div>
+		</div>
+	</div>
+    
 <script>
+function deleteInvoice(id) {
+    swal({
+        title: 'ต้องการลบ ?',
+        text: 'คุณแน่ใจว่าต้องการลบเลขที่อ้างอิงนี้ ?',
+        type: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#DD6855',
+        confirmButtonText: 'ใช่ ฉันต้องการลบ',
+        cancelButtonText: 'ยกเลิก',
+        closeOnConfirm: false
+    }, function() {
+        $.ajax({
+            url: "controller/orderController.php?deleteInvoice",
+            type: "POST",
+            cache: "false",
+            data: { "id_order": id },
+            success: function(rs) {
+                var rs = $.trim(rs);
+                if (rs == 'success') {
+                    swal({ title: "สำเร็จ", text: "ลบรายการเรียบร้อยแล้ว", timer: 1000, type: "success" });
+					setTimeout(function(){ window.location.reload(); }, 2000);
+                } else {
+                    swal("ข้อผิดพลาด!!", "ลบรายการไม่สำเร็จ กรุณาลองใหม่อีกครั้ง", "error");
+                }
+            }
+        });
+    });
+}
+function editInvoice(id)
+{
+	var invoice = $.trim($("#invoice_"+id).text());
+	$("#input-invoice").val(invoice);
+	$("#id_order_inv").val(id);
+	$("#invoiceModal").modal('show');	
+	$("#invoiceModal").on('shown.bs.modal', function(){
+		$("#input-invoice").focus();
+	});
+}
+
+function updateInvoice()
+{
+	$("#invoiceModal").modal('hide');
+	var id = $("#id_order_inv").val();
+	var invoice	= $("#input-invoice").val();
+	if( invoice.length > 4 && id_order != "")
+	{
+		$.ajax({
+			url:"controller/orderController.php?updateInvoice",
+			type:"POST", cache:"false", data:{ "invoice" : invoice, "id_order" : id },
+			success: function(rs){
+				var rs = $.trim(rs);
+				if( rs == 'success' )
+				{
+					swal({ title: 'เรียบร้อย', text: 'แก้ไขข้อมูลเรียบร้อยแล้ว', type: 'success', timer: 2000 });
+					setTimeout(function(){ window.location.reload(); }, 3000);
+				}
+				else
+				{
+					swal("ข้อผิดพลาด", "แก้ไขข้อมูลไม่สำเร็จ", "error");	
+				}
+			}
+		});
+	}
+}
+
+$(".invoice").keyup(function(e) {
+    if( e.keyCode == 13 )
+	{
+		var name = $(this).attr('id');
+		var arr = name.split('_');
+		var id_order = arr[1];
+		saveInvoice(name, id_order);
+	}
+});
+function saveInvoice(name, id)
+{
+	var invoice = $("#"+name).val();
+	if( invoice.length > 4 ){
+		$.ajax({
+			url:"controller/orderController.php?updateInvoice",
+			type:"POST", cache:"false", data:{ "invoice" : invoice, "id_order" : id },
+			success: function(rs){
+				var rs = $.trim(rs);
+				if( rs == 'success' ){
+					$("#span_"+name).text(invoice);
+					$("#"+name).remove();
+					$("#span_"+name).removeClass('hide');
+					$('.invoice:first').focus();	
+				}else{
+					swal("ข้อผิดพลาด", "บันทึกข้อมูลไม่สำเร็จ", "error");
+				}
+			}
+		});
+	}
+}
+
+function toggleNoInvoice()
+{
+	if( $("#noInvoice").val() == 0 )
+	{
+		$("#noInvoice").val(1);
+		$("#btn-noInvoice").addClass('btn-primary');	
+	}else{
+		$("#noInvoice").val(0);
+		$("#btn-noInvoice").removeClass('btn-primary');	
+	}
+	getSearch();
+}
+
 function toggleDate(type)
 {
 	if( type == 'dateAdd')

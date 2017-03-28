@@ -113,4 +113,15 @@ function count_role()
 	list($c) = dbFetchArray(dbQuery("SELECT COUNT(*) FROM tbl_po_role WHERE active = 1 "));
 	return $c;	
 }
+
+function getSupplierNameByPO($id_po)
+{
+	$sup = "";
+	$qs 	= dbQuery("SELECT name FROM tbl_supplier JOIN tbl_po ON tbl_supplier.id = tbl_po.id_supplier WHERE id_po = ".$id_po);
+	if( dbNumRows($qs) == 1 )
+	{
+		list($sup) = dbFetchArray($qs);	
+	}
+	return $sup;
+}
 ?>
