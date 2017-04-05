@@ -324,7 +324,7 @@
 	{
 		createCookie($key, $val);
 		$btn[$key]	= $val != 0 ? 'btn-primary' : '';
-		$role_in .= $key != 'sortDate' ? ($val == 0 ? '' : ($val == 26 ? '2,6,' : $val.',')) : '';
+		$role_in 		.= $key != 'sortDate' ? ($key != 'noInvoice' ?  ($val == 0 ? '' : ($val == 26 ? '2,6,' : $val.',')) : '') : '';
 	}
 	$role_in = trim($role_in, ',');
 	$dateAdd = $os['sortDate'] == 0 ? 'btn-primary' : '';
@@ -450,6 +450,7 @@
 	$paginator->display($get_rows, 'index.php?content=order_closed');
 	$Page_Start = $paginator->Page_Start;
 	$Per_Page = $paginator->Per_Page;
+	//echo "SELECT tbl_order.*, invoice FROM tbl_order LEFT JOIN tbl_order_invoice ON tbl_order.id_order = tbl_order_invoice.id_order " . $where . " LIMIT ". $paginator->Page_Start .", ". $paginator->Per_Page;
 ?>		
 <div class='row'>
 <div class='col-sm-12'>

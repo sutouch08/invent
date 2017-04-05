@@ -39,10 +39,17 @@ switch($page){
 			$content = "support_return.php";
 			$pageTitle = "รับคืนสินค้าอภินันท์";
 			break;
+		case 'order_transform' :
+			$content	= 'order_transform.php';
+			$pageTitle	= 'เบิกแปรสภาพ';
+			break;
+		/**** 
+		ปิดการใช้งานไว้ก่อน ใช้ order_transform แทน 
 		case "requisition";
 			$content = "requisition.php";
 			$pageTitle = "เบิกสินค้า";
 			break;
+			***/	
 		case "lend";
 			$content = "lend.php";
 			$pageTitle = "ยืมสินค้า";

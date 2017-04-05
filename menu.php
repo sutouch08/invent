@@ -11,20 +11,21 @@
                 </li>
                 <li class="dropdown-submenu"><a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-download"></i>&nbsp; รับคืนสินค้า</a>
                 	<ul class="dropdown-menu">
-                    	<li><a href="index.php?content=order_return">	<i class="fa fa-download"></i>&nbsp; รับคืนสินค้า จากการขาย(ปัจจุบัน)	</a>
-                        <li><a href="index.php?content=order_return2">	<i class="fa fa-download"></i>&nbsp; รับคืนสินค้า จากการขาย(อดีต)		</a>
-                        <li><a href="index.php?content=support_return">	<i class="fa fa-download"></i>&nbsp; รับคืนสินค้า จากอภินันท์			</a>
-                        <li><a href="index.php?content=sponsor_return">	<i class="fa fa-download"></i>&nbsp; รับคืนสินค้า จากสปอนเซอร์		</a>
+                    	<li><a href="index.php?content=order_return"><i class="fa fa-download"></i>&nbsp; รับคืนสินค้า จากการขาย(ปัจจุบัน)	</a>
+                        <li><a href="index.php?content=order_return2"><i class="fa fa-download"></i>&nbsp; รับคืนสินค้า จากการขาย(อดีต)</a>
+                        <li><a href="index.php?content=support_return"><i class="fa fa-download"></i>&nbsp; รับคืนสินค้า จากอภินันท์</a>
+                        <li><a href="index.php?content=sponsor_return"><i class="fa fa-download"></i>&nbsp; รับคืนสินค้า จากสปอนเซอร์</a>
                     </ul>
                 </li>
                  <li class="divider"></li>
-                <li><a href="index.php?content=requisition">		<i class="fa fa-upload"></i>&nbsp; เบิกสินค้าเพื่อแปรรูป		</a></li>
-                <li><a href="index.php?content=order_support">	<i class="fa fa-upload"></i>&nbsp; เบิกอภินันทนาการ			</a></li>
-                <li><a href="index.php?content=lend">				<i class="fa fa-upload"></i>&nbsp; ยืมสินค้า					</a></li>
+                <!-- <li><a href="index.php?content=requisition">		<i class="fa fa-upload"></i>&nbsp; เบิกสินค้าเพื่อแปรรูป		</a></li> -->
+                <li><a href="index.php?content=order_transform"><i class="fa fa-upload"></i>&nbsp; เบิกสินค้าเพื่อแปรสภาพ</a></li>
+                <li><a href="index.php?content=order_support"><i class="fa fa-upload"></i>&nbsp; เบิกอภินันทนาการ</a></li>
+                <li><a href="index.php?content=lend"><i class="fa fa-upload"></i>&nbsp; ยืมสินค้า</a></li>
                 <li class="divider"></li>
-                <li><a href="index.php?content=tranfer">			<i class="fa fa-recycle"></i>&nbsp; โอนสินค้าระหว่างคลัง</a></li>
-                <li><a href="index.php?content=ProductMove">		<i class="fa fa-recycle"></i>&nbsp; ย้ายพื้นที่จัดเก็บ</a></li>
-                <li><a href="index.php?content=ProductCheck">	<i class="fa fa-check-square-o"></i>&nbsp; ตรวจนับสินค้า</a></li>
+                <li><a href="index.php?content=tranfer"><i class="fa fa-recycle"></i>&nbsp; โอนสินค้าระหว่างคลัง</a></li>
+                <li><a href="index.php?content=ProductMove"><i class="fa fa-recycle"></i>&nbsp; ย้ายพื้นที่จัดเก็บ</a></li>
+                <li><a href="index.php?content=ProductCheck"><i class="fa fa-check-square-o"></i>&nbsp; ตรวจนับสินค้า</a></li>
                 <li><a href="index.php?content=ProductAdjust"><span class="glyphicon glyphicon-tasks"></span>&nbsp; ปรับปรุงยอด</a></li>
                 <li><a href="index.php?content=drop_zero"><span class="glyphicon glyphicon-tasks"></span>&nbsp; เคลียร์ยอดสต็อกที่เป็นศูนย์</a></li>
                 <li><a href="index.php?content=buffer_zone"><span class="glyphicon glyphicon-tasks"></span>&nbsp; ตรวจสอบ BUFFER ZONE</a></li>

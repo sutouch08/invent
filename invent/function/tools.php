@@ -972,9 +972,6 @@ function get_max_role_reference($config_name, $role, $date=""){
 
 
 
-
-
-
 function get_max_po_reference($date = "")
 {
 	$prefix = getConfig("PREFIX_PO");
