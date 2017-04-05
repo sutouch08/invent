@@ -7,5 +7,10 @@ function selectTransformRole($se = '')
 	$sc .= '<option value="6" '. isSelected($se, 6) .'>แปรสภาพเพื่อสปอนเซอร์</option>';
 	return $sc;
 }
+
+function testx()
+{
+	return TRUE;	
+}
 	
 ?>
