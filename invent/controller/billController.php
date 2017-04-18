@@ -56,6 +56,7 @@ if(isset($_GET['confirm_order'])&&isset($_GET['id_order']))
 				$qs = dbQuery($qr);
 				while( $row = dbFetchArray($qs) )
 				{
+					set_time_limit(60);
 					$id_pa					= $row['id_product_attribute']; 
 					$qty 						= $row['qty'];
 					$date_upd 				= date("Y-m-d H:i:s");
@@ -82,6 +83,7 @@ if(isset($_GET['confirm_order'])&&isset($_GET['id_order']))
 		
 			while( $row = dbFetchArray($qs) )
 			{
+				set_time_limit(60);
 				$id_product_attribute = $row['id_product_attribute']; 
 				$qty = $row['qty'];
 				$date_upd = date("Y-m-d H:i:s");
@@ -135,16 +137,19 @@ if(isset($_GET['confirm_order'])&&isset($_GET['id_order']))
 		if( $success === TRUE )
 		{  
 			commitTransection();		
+			endTransection();
 			header("location: ../index.php?content=bill&id_order=$id_order&view_detail=y&message=success");
 		}
 		else
 		{
 			dbRollback();	
+			endTransection();
 			dbQuery("UPDATE tbl_order SET current_state = 10 WHERE id_order = ".$id_order);
 			dbQuery("DELETE FROM tbl_order_state_change WHERE id_order = ".$id_order." AND id_order_state = 9 AND id_employee = ".$id_employee);
 			$err = "ทำรายการไม่สำเร็จ กรุณาลองใหม่อีกครั้ง";
 			header("location: ../index.php?content=bill&id_order=$id_order&view_detail=y&error=$err");
 		}
+		
 	}
 }
 

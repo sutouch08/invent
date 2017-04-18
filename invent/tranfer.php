@@ -654,6 +654,8 @@ function delete_tranfer(id_tranfer){
 		});
 	}
 }
+
+/*
 $(document).ready(function(e) {
     $("#zone_name").autocomplete({
 		source:"controller/tranferController.php?autozone&zone_name="+zone_name,
@@ -663,6 +665,7 @@ $(document).ready(function(e) {
 		}
 	});
 });
+*/
 
 $("#check_zero").change(function(e) {
     if($(this).is(':checked') )

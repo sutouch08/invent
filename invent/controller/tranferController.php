@@ -15,50 +15,55 @@ if(isset($_GET['add'])){
 	header("location: ../index.php?content=tranfer&add=y&id_tranfer=$id_tranfer");
 }
 if(isset($_GET['check_zone'])){
-	$rs = '';
-	$zone = $_GET['zone'];
-	$id_tranfer = $_GET['id_tranfer'];
+	$sc 			= '';
+	$zone 		= $_GET['zone'];
+	$id_tranfer 	= $_GET['id_tranfer'];
 	list($warehouse_from) = dbFetchArray(dbQuery("SELECT warehouse_from FROM tbl_tranfer WHERE id_tranfer = '$id_tranfer'"));
 	list($id_zone) = dbFetchArray(dbQuery("SELECT id_zone FROM tbl_zone WHERE (barcode_zone LIKE '%$zone%' OR zone_name LIKE '%$zone%') AND id_warehouse = '$warehouse_from'"));
-	if($id_zone != ""){
-	$rs .= "ok!$id_zone!<table class='table table-bordered'><thead id='head'><th style='width:5%;'>ลำดับ</th><th style='width:15%;'>บาร์โค้ด</th><th style='width:30%;'>รหัสสินค้า</th><th style='width:10%;'>จำนวน</th></thead>";
-	$sql = dbQuery("SELECT id_stock,id_product_attribute,qty FROM tbl_stock WHERE id_zone = $id_zone");
-	$row = dbNumRows($sql);
-	$n = 1;
-	$i = 0;
-	if($row>0){
-	while($i<$row){
-		list($id_stock,$id_product_attribute,$qty)= dbFetchArray($sql);
-		$product = new product();
-		$product->product_attribute_detail($id_product_attribute);
-		$reference = $product->reference;
-		$barcode = $product->barcode;
-		$rs .="<tr id='row$id_product_attribute'><td style='text-align:center; vertical-align:middle;'>$n</td><td style='vertical-align:middle;'>$barcode</td><td style='vertical-align:middle;'>$reference</td><td style='text-align:center; vertical-align:middle;'>$qty</td></tr>";
-				$i++;
-				$n++;
+	if($id_zone != "")
+	{
+		$sc .= "ok!$id_zone!<table class='table table-bordered'><thead id='head'><th style='width:5%;'>ลำดับ</th><th style='width:15%;'>บาร์โค้ด</th><th style='width:30%;'>รหัสสินค้า</th><th style='width:10%;'>จำนวน</th></thead>";
+		$sql = dbQuery("SELECT id_stock, tbl_stock.id_product_attribute, qty, barcode, reference FROM tbl_stock JOIN tbl_product_attribute ON tbl_stock.id_product_attribute = tbl_product_attribute.id_product_attribute WHERE id_zone = $id_zone");
+		$n = 1;
+		if(dbNumRows($sql) > 0 ){
+			while( $rs = dbFetchObject($sql) )
+			{
+				set_time_limit(60);
+				$sc .= '<tr id="row' . $rs->id_product_attribute .'">';
+				$sc .= 	'<td class="text-center; middle;">' .$n.'</td>';
+				$sc .= 	'<td class="text-center; middle;">' . $rs->barcode .'</td>';
+				$sc .= 	'<td class="text-center; middle;">' . $rs->reference .'</td>';
+				$sc .= 	'<td class="text-center; middle;">' . $rs->qty .'</td>';
+				$sc .= '</tr>';
+						$n++;
+			} //end while
+		}
+		else
+		{
+			$sc .="<tr><td colspan='6' align='center'><h3>ไม่มีสินค้าในโซนนี้</h3></td></tr>";
+		}
+		$sc .= "</table>	";
 	}
-	}else{
-		$rs .="<tr><td colspan='6' align='center'><h3>ไม่มีสินค้าในโซนนี้</h3></td></tr>";
+	else
+	{
+		$sc .= "fales!ไม่มีโซนนี้";
 	}
-	$rs .= "</table>	";
-	}else{
-		$rs .= "fales!ไม่มีโซนนี้";
-	}
-	echo $rs;
+	echo $sc;
 }
 
 if( isset( $_GET['moveout'] ) )
 {
+	$sc	= '';
 	$id_zone 				= $_GET['id_zone'];
 	$id_tranfer 				= $_GET['id_tranfer'];
 	$barcode_item 		= $_GET['barcode_item'];
 	$qty 						= $_GET['qty'];
 	$allow_under_zero 	= $_GET['under_zero'];
-	$date_upd 				= date("Y-m-d");
-	
+	$date_upd 				= date("Y-m-d");	
 	list($id_product_attribute, $reference) = dbFetchArray(dbQuery("SELECT id_product_attribute, reference FROM tbl_product_attribute WHERE barcode = '$barcode_item'"));
-	if($id_product_attribute != "") :
-	list($id_stock,$qty_stock) = dbFetchArray(dbQuery("SELECT id_stock, qty FROM tbl_stock WHERE id_product_attribute = $id_product_attribute AND id_zone = $id_zone"));
+	if($id_product_attribute != "")
+	{
+		list($id_stock,$qty_stock) = dbFetchArray(dbQuery("SELECT id_stock, qty FROM tbl_stock WHERE id_product_attribute = $id_product_attribute AND id_zone = $id_zone"));
 		if( $id_stock == "" && $allow_under_zero)
 		{
 			$qs = dbQuery("INSERT INTO tbl_stock (id_zone, id_product_attribute, qty) VALUES ( $id_zone, $id_product_attribute, 0)");
@@ -72,7 +77,8 @@ if( isset( $_GET['moveout'] ) )
 				$id_stock = "";
 			}
 		}
-		if($id_stock != "") :
+		
+		if($id_stock != ""){
 			if($qty <= "$qty_stock" || $allow_under_zero ){
 				list($reference_tranfer, $warehouse_from) = dbFetchArray(dbQuery("SELECT reference,warehouse_from FROM tbl_tranfer WHERE id_tranfer = $id_tranfer"));
 				list($id_tranfer_detail,$tranfer_qty) = dbFetchArray(dbQuery("SELECT id_tranfer_detail,tranfer_qty FROM tbl_tranfer_detail WHERE id_tranfer = $id_tranfer AND id_product_attribute = $id_product_attribute"));
@@ -85,37 +91,56 @@ if( isset( $_GET['moveout'] ) )
 					dbQuery("INSERT INTO tbl_tranfer_detail (id_tranfer,id_product_attribute,id_zone_from,tranfer_qty)VALUES('$id_tranfer','$id_product_attribute','$id_zone','$qty')");
 				}
 				stock_movement("out", 2, $id_product_attribute, $warehouse_from, $qty, $reference_tranfer, $date_upd, $id_zone);
-				echo "ok!$id_zone!<table class='table table-bordered'><thead id='head'><th style='width:5%;'>ลำดับ</th><th style='width:15%;'>บาร์โค้ด</th><th style='width:30%;'>รหัสสินค้า</th><th style='width:10%;'>จำนวน</th></thead>";
-				$sql = dbQuery("SELECT id_stock,id_product_attribute,qty FROM tbl_stock WHERE id_zone = $id_zone");
-				$row = dbNumRows($sql);
+				$sc .= 'ok!' . $id_zone . '!<table class="table table-bordered">';
+				$sc .= '<thead id="head">';
+				$sc .= 	'<th style="width:5%;">ลำดับ</th>';
+				$sc .= 	'<th style="width:15%;">บาร์โค้ด</th>';
+				$sc .= 	'<th style="width:30%;">รหัสสินค้า</th>';
+				$sc .= 	'<th style="width:10%;">จำนวน</th>';
+				$sc .= '</thead>';
+				$sql = dbQuery("SELECT id_stock, tbl_stock.id_product_attribute, qty, reference, barcode FROM tbl_stock JOIN tbl_product_attribute ON tbl_stock.id_product_attribute = tbl_product_attribute.id_product_attribute WHERE id_zone = $id_zone");
 				$n = 1;
-				$i = 0;
-				if($row>0){
-				while($i<$row){
-					list($id_stock,$id_product_attribute,$qty)= dbFetchArray($sql);
-					$product = new product();
-					$product->product_attribute_detail($id_product_attribute);
-					$reference = $product->reference;
-					$barcode = $product->barcode;
-					echo"<tr id='row$id_product_attribute'><td style='text-align:center; vertical-align:middle;'>$n</td><td style='vertical-align:middle;'>$barcode</td><td style='vertical-align:middle;'>$reference</td><td style='text-align:center; vertical-align:middle;'>$qty</td></tr>";
-							$i++;
-							$n++;
+				if( dbNumRows($sql) > 0)
+				{
+					while( $rs = dbFetchObject($sql) )
+					{
+						$sc .= '<tr id="row' . $rs->id_product_attribute . '">';
+						$sc .= 	'<td class="text-center; middle;">' . $n . '</td>';
+						$sc .= 	'<td class="middle;">' . $rs->barcode . '</td>';
+						$sc .= 	'<td class="middle;">' . $rs->reference . '</td>';
+						$sc .= 	'<td class="text-center; middle;">' . $rs->qty . '</td>';
+						$sc .= '</tr>';
+						$n++;
+					}
 				}
-				}else{
-					echo"<tr><td colspan='6' align='center'><h3>ไม่มีสินค้าในโซนนี้</h3></td></tr>";
+				else
+				{
+					$sc .= "<tr><td colspan='6' align='center'><h3>ไม่มีสินค้าในโซนนี้</h3></td></tr>";
 				}
-				echo"</table>	";
-			}else{
-				echo "fales!จำนวนสินค้าเกิน";
+				
+				$sc .= "</table>";
+				
 			}
-		else :
+			else
+			{
+				$sc .=  "fales!จำนวนสินค้าเกิน";
+			}
+		}
+		else
+		{
 			
-			echo "fales!ไม่มี $reference ในโซนนี้";
-		endif;
-	else :
-		echo "false!ไม่มีบาร์โค้ดสินค้านี้";
-	endif;
+			$sc .= "fales!ไม่มี $reference ในโซนนี้";
+		}
+	}
+	else
+	{
+		$sc .= "false!ไม่มีบาร์โค้ดสินค้านี้";
+	}
+	
+	echo $sc;
 }
+
+
 
 
 if(isset($_GET['item_move'])){
